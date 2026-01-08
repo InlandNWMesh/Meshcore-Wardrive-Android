@@ -1,0 +1,7 @@
+# Temporary files
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Don't ignore the releases folder!
+!releases/
