@@ -4,7 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.0 APK](releases/meshcore_wardrive_v1.0.0.apk) (52.5 MB)
+**Latest Release:** [v1.0.1 APK](releases/meshcore_wardrive_v1.0.1.apk) (52.6 MB)
+
+**Previous Versions:**
+- [v1.0.0 APK](releases/meshcore_wardrive_v1.0.0.apk) (52.5 MB)
 
 ## 📸 Screenshots
 
@@ -67,7 +70,7 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 2. As you move, it sends ping messages on the #meshwar channel
 3. Repeaters that hear your ping respond with an echo
 4. The app records which repeaters responded and their signal quality
-5. Coverage is visualized as colored grid squares (~153m x 153m)
+5. Coverage is visualized as colored grid squares (~1.2km x 610m)
 6. Data can be uploaded to the web map for community viewing
 
 ## 🔧 Configuration
@@ -80,7 +83,7 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 
 ### Default Settings
 - Ping interval: 0.5 miles (805 meters)
-- Grid size: ~153m x 153m squares
+- Grid size: ~1.2km x 610m squares (precision 6)
 - GPS accuracy: High
 - Update frequency: Every 5 meters of movement
 
@@ -154,6 +157,26 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.1 (2026-01-09)
+**Bug Fixes:**
+- 🔧 Fixed background GPS tracking on modern Android devices (Pixel 8, etc.)
+- 🔧 Implemented foreground service with persistent notification
+- 🔧 Fixed map not updating in real-time during tracking
+- 🔧 Fixed auto-ping blocking location updates
+- 🔧 Debug terminal now scrolls to latest logs when opened
+
+**Improvements:**
+- ⚡ Non-blocking ping system - location tracking continues smoothly
+- ⚡ Real-time map updates when samples are saved
+- ⚡ Changed grid precision to 6 for better coverage while walking
+- 📱 Added notification permission request for Android 13+
+
+**Web Map Updates:**
+- 🌐 Disabled infinite horizontal scrolling
+- 🌐 Fixed repeater display to only show when pings received
+- 🌐 Filtered out "Unknown" nodes from repeater lists
+- 🌐 Synced grid precision with Android app
 
 ### v1.0.0 (2026-01-08)
 - Initial release
