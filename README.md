@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.3 APK](releases/meshcore_wardrive_v1.0.3.apk) (52.7 MB)
+**Latest Release:** [v1.0.4 APK](releases/meshcore_wardrive_v1.0.4.apk) (52.7 MB)
 
 **Previous Versions:**
+- [v1.0.3 APK](releases/meshcore_wardrive_v1.0.3.apk) (52.7 MB)
 - [v1.0.2 APK](releases/meshcore_wardrive_v1.0.2.apk) (52.6 MB)
 - [v1.0.1 APK](releases/meshcore_wardrive_v1.0.1.apk) (52.6 MB)
 - [v1.0.0 APK](releases/meshcore_wardrive_v1.0.0.apk) (52.5 MB)
@@ -159,6 +160,10 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.4 (2026-01-09)
+**Improvements:**
+- ✨ Increased map zoom out range for better overview
 
 ### v1.0.3 (2026-01-09)
 **New Features:**

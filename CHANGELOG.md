@@ -2,6 +2,12 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.4] - 2026-01-09
+
+### Changed
+- Increased map zoom out range from level 8 to level 3
+- Allows viewing entire regions and multiple states at once
+
 ## [1.0.3] - 2026-01-09
 
 ### Added
