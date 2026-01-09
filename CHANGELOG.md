@@ -2,6 +2,27 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.3] - 2026-01-09
+
+### Added
+- Auto-ping visual feedback with orange pulse animation on map
+- Persistent notification updates during auto-ping:
+  - Shows "Pinging..." when ping starts
+  - Shows "✅ Heard by [node]" on success
+  - Shows "❌ No response" on failure
+  - Returns to "Location tracking active" after 3 seconds
+- Check for Updates feature in settings
+  - Queries GitHub API for latest release
+  - Shows update available dialog when new version exists
+  - Direct download link to GitHub releases
+- View on GitHub link in settings
+- "About" section in settings menu
+
+### Technical
+- Added `url_launcher` package for opening external links
+- Implemented ping event stream for real-time UI feedback
+- Added foreground service notification updates
+
 ## [1.0.2] - 2026-01-09
 
 ### Fixed
