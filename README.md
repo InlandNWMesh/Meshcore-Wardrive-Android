@@ -166,6 +166,7 @@ The more users contribute, the more accurate the coverage map becomes!
 - ✨ Persistent notification updates show ping status and results
 - ✨ Check for Updates - Compare your version with latest GitHub release
 - ✨ View on GitHub link in settings
+- ✨ Increased map zoom out range for better overview
 
 ### v1.0.2 (2026-01-09)
 **Bug Fix:**

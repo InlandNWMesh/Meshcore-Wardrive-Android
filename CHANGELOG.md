@@ -17,6 +17,7 @@ All notable changes to MeshCore Wardrive will be documented in this file.
   - Direct download link to GitHub releases
 - View on GitHub link in settings
 - "About" section in settings menu
+- Increased map zoom out range (minZoom: 3.0) for better overview
 
 ### Technical
 - Added `url_launcher` package for opening external links
