@@ -2,6 +2,13 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.2] - 2026-01-09
+
+### Fixed
+- Settings menu now properly accounts for system navigation bar padding
+- Bottom sheet no longer hidden behind on-screen navigation buttons (back/home/recent apps)
+- Improved compatibility with devices using gesture navigation vs button navigation
+
 ## [1.0.1] - 2026-01-09
 
 ### Fixed
