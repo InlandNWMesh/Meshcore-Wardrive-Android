@@ -2,6 +2,17 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.5] - 2026-01-09
+
+### Fixed
+- Coverage squares now populate correctly when auto-ping is enabled
+- Fixed duplicate GPS sample saving that was preventing coverage squares from showing
+- When auto-ping is active, only the ping result is saved (not the intermediate GPS sample)
+
+### Technical
+- Removed redundant sample saving in location_service.dart when auto-ping triggers
+- GPS samples are now only saved when auto-ping is disabled or between ping intervals
+
 ## [1.0.4] - 2026-01-09
 
 ### Changed
