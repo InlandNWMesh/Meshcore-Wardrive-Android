@@ -2,6 +2,35 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.8] - 2026-01-10
+
+### Added
+- **Debug Diagnostics screen** for troubleshooting Samsung Galaxy Fold and other device issues
+- Persistent debug logging to external storage
+  - Logs tracking start/stop events
+  - Logs GPS position updates with accuracy
+  - Logs auto-ping triggers and results
+  - Logs foreground service lifecycle
+  - Logs permission checks
+  - Logs wakelock status
+  - Logs all errors with context
+- Debug log viewer with:
+  - File size and timestamp display
+  - View logs in-app with selectable text
+  - Share logs via any app (email, messaging, etc.)
+  - Delete old logs
+- Accessible from Settings → Debug → Debug Diagnostics
+
+### Fixed
+- Improved troubleshooting for Samsung Galaxy Fold 6/7 GPS tracking issues
+
+### Technical
+- Added `PersistentDebugLogger` service with timestamped log files
+- Files saved to external storage: `meshcore_debug_YYYYMMDD_HHMMSS.txt`
+- Logs survive app kills and restarts
+- Added `share_plus` package for log sharing
+- Integrated debug logger throughout `location_service.dart`
+
 ## [1.0.7] - 2026-01-10
 
 ### Added

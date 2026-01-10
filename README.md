@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
+**Latest Release:** [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
 
 **Previous Versions:**
+- [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
 - [v1.0.6 APK](releases/meshcore_wardrive_v1.0.6.apk) (52.7 MB)
 - [v1.0.5 APK](releases/meshcore_wardrive_v1.0.5.apk) (52.7 MB)
 - [v1.0.4 APK](releases/meshcore_wardrive_v1.0.4.apk) (52.7 MB)
@@ -127,6 +128,15 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 - For Bluetooth: Make sure device is paired in Android settings first
 - Try disconnecting and reconnecting
 
+**Samsung Galaxy Fold GPS/Auto-Ping Issues?**
+- Go to Settings → Debug → Debug Diagnostics
+- Start tracking, reproduce the issue, then share the debug log
+- Check Samsung battery optimization settings:
+  - Set app to "Unrestricted" battery usage
+  - Add to "Never sleeping apps" in Device Care
+  - Disable "Put app to sleep" for this app
+  - Use "Allow all the time" location permission (not just "While using")
+
 **"#meshwar Not Found" error?**
 - You must join #meshwar channel in MeshCore app first
 - Get the QR code from another user
@@ -161,6 +171,15 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.8 (2026-01-10)
+**New Features:**
+- 🐛 Debug Diagnostics screen for troubleshooting device issues
+- 📋 Persistent debug logging tracks GPS, auto-ping, permissions, and service events
+- 📤 Share debug logs with developers via email or messaging
+- 🔍 Helpful for diagnosing Samsung Galaxy Fold GPS/tracking issues
+
+**Access:** Settings → Debug → Debug Diagnostics
 
 ### v1.0.7 (2026-01-10)
 **New Features:**
