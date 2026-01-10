@@ -2,6 +2,15 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.6] - 2026-01-10
+
+### Changed
+- Reduced ping timeout from 30 seconds to 20 seconds for faster response detection
+- Improved ping reliability matching MeshCore app behavior
+
+### Technical
+- Optimized ping wait time to match typical mesh network response times
+
 ## [1.0.5] - 2026-01-09
 
 ### Fixed
