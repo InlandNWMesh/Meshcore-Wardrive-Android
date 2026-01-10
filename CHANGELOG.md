@@ -2,6 +2,22 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.7] - 2026-01-10
+
+### Added
+- Clickable coverage squares showing detailed information
+- Coverage info popup displays:
+  - Total samples collected in square
+  - Success rate percentage
+  - Received vs lost ping counts
+  - Number of repeaters heard
+  - Repeater ID prefixes (first 2 characters)
+- Same information as webmap coverage squares
+
+### Technical
+- Added invisible tap markers at coverage square centers
+- Implemented coverage info dialog matching webmap functionality
+
 ## [1.0.6] - 2026-01-10
 
 ### Changed
