@@ -13,10 +13,18 @@ All notable changes to MeshCore Wardrive will be documented in this file.
   - Number of repeaters heard
   - Repeater ID prefixes (first 2 characters)
 - Same information as webmap coverage squares
+- Draggable scrollable settings menu (swipe up/down)
+
+### Fixed
+- Settings menu no longer overlaps top bar or navigation buttons
+- Repeater IDs now properly tracked from actual ping responses
+- Coverage squares show IDs of repeaters that actually echoed pings
 
 ### Technical
 - Added invisible tap markers at coverage square centers
 - Implemented coverage info dialog matching webmap functionality
+- Track repeater IDs from sample.path (node that echoed)
+- Wrapped settings in DraggableScrollableSheet with SafeArea
 
 ## [1.0.6] - 2026-01-10
 

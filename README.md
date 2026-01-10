@@ -167,6 +167,11 @@ The more users contribute, the more accurate the coverage map becomes!
 - 📱 Tap coverage squares to see detailed info
 - 📊 Shows samples, success rate, received/lost pings, and repeater IDs
 - 🗺️ Same coverage info as webmap
+- 👆 Draggable scrollable settings menu
+
+**Bug Fixes:**
+- 🔧 Fixed settings menu overlapping top bar and nav buttons
+- 🔧 Fixed repeater IDs showing actual nodes that echoed pings
 
 ### v1.0.6 (2026-01-10)
 **Improvements:**
