@@ -2,6 +2,21 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.9] - 2026-01-10
+
+### Added
+- Enhanced debug logging for auto-ping troubleshooting
+  - Logs LoRa device connection status when enabling auto-ping
+  - Logs connection type (USB/Bluetooth/None)
+  - Logs ping condition checks on every GPS update when auto-ping enabled
+  - Logs distance calculations from last ping position
+  - Shows threshold vs actual distance for debugging ping triggers
+
+### Technical
+- Added detailed connection status logging in `enableAutoPing()`
+- Added per-GPS-update ping condition logging
+- Helps diagnose why auto-ping may not trigger even when enabled
+
 ## [1.0.8] - 2026-01-10
 
 ### Added
