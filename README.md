@@ -4,10 +4,9 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.9 APK](releases/meshcore_wardrive_v1.0.9.apk) (53.3 MB)
+**Latest Release:** [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
 
 **Previous Versions:**
-- [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
 - [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
 - [v1.0.6 APK](releases/meshcore_wardrive_v1.0.6.apk) (52.7 MB)
 - [v1.0.5 APK](releases/meshcore_wardrive_v1.0.5.apk) (52.7 MB)
@@ -173,20 +172,12 @@ The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
 
-### v1.0.9 (2026-01-10)
-**Improvements:**
-- 🔍 Enhanced debug logging for auto-ping troubleshooting
-- 📊 Logs LoRa connection status, distance calculations, and ping conditions
-- 🐛 Helps diagnose auto-ping trigger issues
-
-### v1.0.8 (2026-01-10)
-**New Features:**
-- 🐛 Debug Diagnostics screen for troubleshooting device issues
-- 📋 Persistent debug logging tracks GPS, auto-ping, permissions, and service events
-- 📤 Share debug logs with developers via email or messaging
-- 🔍 Helpful for diagnosing Samsung Galaxy Fold GPS/tracking issues
-
-**Access:** Settings → Debug → Debug Diagnostics
+### v1.0.8 (2026-01-11)
+**Critical Fix:**
+- 🚨 **FIXED: Removed Seattle-area geofence blocking auto-ping outside 60-mile radius**
+- 🌍 Auto-ping now works globally, anywhere on Earth
+- 🔧 Fixes Samsung Galaxy Fold 6/7 and other users' auto-ping not triggering
+- ✅ App now supports worldwide coverage collection
 
 ### v1.0.7 (2026-01-10)
 **New Features:**

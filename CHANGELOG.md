@@ -2,49 +2,18 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
-## [1.0.9] - 2026-01-10
-
-### Added
-- Enhanced debug logging for auto-ping troubleshooting
-  - Logs LoRa device connection status when enabling auto-ping
-  - Logs connection type (USB/Bluetooth/None)
-  - Logs ping condition checks on every GPS update when auto-ping enabled
-  - Logs distance calculations from last ping position
-  - Shows threshold vs actual distance for debugging ping triggers
-
-### Technical
-- Added detailed connection status logging in `enableAutoPing()`
-- Added per-GPS-update ping condition logging
-- Helps diagnose why auto-ping may not trigger even when enabled
-
-## [1.0.8] - 2026-01-10
-
-### Added
-- **Debug Diagnostics screen** for troubleshooting Samsung Galaxy Fold and other device issues
-- Persistent debug logging to external storage
-  - Logs tracking start/stop events
-  - Logs GPS position updates with accuracy
-  - Logs auto-ping triggers and results
-  - Logs foreground service lifecycle
-  - Logs permission checks
-  - Logs wakelock status
-  - Logs all errors with context
-- Debug log viewer with:
-  - File size and timestamp display
-  - View logs in-app with selectable text
-  - Share logs via any app (email, messaging, etc.)
-  - Delete old logs
-- Accessible from Settings → Debug → Debug Diagnostics
+## [1.0.8] - 2026-01-11
 
 ### Fixed
-- Improved troubleshooting for Samsung Galaxy Fold 6/7 GPS tracking issues
+- **CRITICAL: Removed Seattle-area geofence that was blocking auto-ping for all users outside 60-mile radius**
+  - Auto-ping now works globally, anywhere on Earth
+  - Fixes issue where auto-ping appeared enabled but never triggered for users outside Seattle area
+  - This was the root cause of Samsung Galaxy Fold 6/7 users reporting non-functioning auto-ping
 
 ### Technical
-- Added `PersistentDebugLogger` service with timestamped log files
-- Files saved to external storage: `meshcore_debug_YYYYMMDD_HHMMSS.txt`
-- Logs survive app kills and restarts
-- Added `share_plus` package for log sharing
-- Integrated debug logger throughout `location_service.dart`
+- Removed hardcoded distance check from `GeohashUtils.isValidLocation()`
+- Location validation now only checks basic latitude/longitude bounds (-90 to 90, -180 to 180)
+- App now supports worldwide coverage collection
 
 ## [1.0.7] - 2026-01-10
 
