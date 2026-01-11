@@ -2,6 +2,32 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.10] - 2026-01-11
+
+### Added
+- **Configurable Coverage Resolution** - Dynamically adjust coverage square size
+  - 5 precision levels: Regional (~20km), City (~5km), Neighborhood (~1.2km), Street (~153m), Building (~38m)
+  - Samples stored at high precision (38m), re-aggregated on-the-fly based on user preference
+  - Accessible via Settings → Coverage Resolution
+  - Allows drivers to see regional trends and walkers to map precise street-level coverage
+- **Smart Sample Weighting System** - Intelligently handles conflicting coverage data
+  - Newer samples receive higher weight than older samples
+  - Old samples contradicted by 2+ newer samples are heavily discounted (10% weight)
+  - Samples that agree with newer data maintain full weight
+  - Time-based decay: Fresh (100%), 1-day (80%), 1-week (50%), 30+ days (20%)
+  - Dead zones can become green if new data shows coverage, and vice versa
+
+### Changed
+- Coverage model now uses weighted fractional counts (double) instead of integer counts
+- Aggregation service groups samples by coverage area before processing
+- Success rate calculations now factor in sample age and contradictions
+
+### Technical
+- Modified `GeohashUtils.coverageKey()` to accept precision parameter (4-8)
+- Updated `AggregationService.buildIndexes()` with coveragePrecision parameter
+- Coverage.received and Coverage.lost changed from int to double
+- Added contradiction detection algorithm comparing samples in same coverage area
+
 ## [1.0.9] - 2026-01-11
 
 ### Added
