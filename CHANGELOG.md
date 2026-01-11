@@ -2,6 +2,22 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.9] - 2026-01-11
+
+### Added
+- **Auto-follow GPS location button** - Map automatically centers and follows your position
+  - Toggle on/off with GPS button (above play/stop button)
+  - Shows `gps_fixed` icon (blue background) when active
+  - Shows `gps_not_fixed` icon (gray) when inactive
+  - Automatically disables when you manually pan/drag the map
+  - Toast notifications show when enabled/disabled
+
+### Technical
+- Added `_followLocation` state variable
+- Map controller automatically moves to GPS position on location updates when enabled
+- `onMapEvent` handler detects manual map panning and disables auto-follow
+- Replaced `my_location` button with toggle-able GPS follow button
+
 ## [1.0.8] - 2026-01-11
 
 ### Fixed

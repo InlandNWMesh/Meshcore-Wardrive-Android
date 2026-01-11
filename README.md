@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
+**Latest Release:** [v1.0.9 APK](releases/meshcore_wardrive_v1.0.9.apk) (53.4 MB)
 
 **Previous Versions:**
+- [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
 - [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
 - [v1.0.6 APK](releases/meshcore_wardrive_v1.0.6.apk) (52.7 MB)
 - [v1.0.5 APK](releases/meshcore_wardrive_v1.0.5.apk) (52.7 MB)
@@ -171,6 +172,12 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.9 (2026-01-11)
+**New Features:**
+- 📍 **Auto-follow GPS location** - Map automatically centers and follows your blue dot
+- 🔄 Toggle with GPS button - blue when active, gray when inactive
+- 👆 Automatically disables when you manually pan the map
 
 ### v1.0.8 (2026-01-11)
 **Critical Fix:**
