@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.10 APK](releases/meshcore_wardrive_v1.0.10.apk) (53.4 MB)
+**Latest Release:** [v1.0.11 APK](releases/meshcore_wardrive_v1.0.11.apk) (53.4 MB)
 
 **Previous Versions:**
+- [v1.0.10 APK](releases/meshcore_wardrive_v1.0.10.apk) (53.4 MB)
 - [v1.0.9 APK](releases/meshcore_wardrive_v1.0.9.apk) (53.4 MB)
 - [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
 - [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
@@ -173,6 +174,18 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.11 (2026-01-11)
+**New Features:**
+- 👆 **Clickable sample markers** - Tap any sample dot to see repeater, RSSI, and SNR
+- 📊 View detailed ping info including signal strength and quality
+- ⏱️ Sample timestamps and GPS coordinates in popup
+
+**Critical Fix:**
+- 🔧 **FIXED: RSSI/SNR values now display correctly in ping results**
+- 📶 Signal strength and quality metrics now accurate
+- 🎯 0x88 frames properly parsed as raw radio log data
+- ✅ Fixes null values in debug terminal
 
 ### v1.0.10 (2026-01-11)
 **Major Features:**

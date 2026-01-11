@@ -2,6 +2,34 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.11] - 2026-01-11
+
+### Added
+- **Clickable Sample Markers** - Tap any sample dot on the map to view details
+  - Shows ping status (Success/Failed/GPS Only)
+  - Displays timestamp when sample was collected
+  - Shows latitude/longitude coordinates
+  - Displays repeater ID that heard the ping
+  - Shows RSSI (signal strength) and SNR (signal quality) values
+  - Matches webmap functionality with additional signal metrics
+
+### Fixed
+- **CRITICAL: Fixed RSSI/SNR values showing as null in ping results**
+  - 0x88 frames are raw radio log frames (PUSH_CODE_LOG_RX_DATA), not channel echoes
+  - SNR and RSSI now correctly extracted from bytes 0-1 of frame payload
+  - SNR value automatically descaled from firmware's 4x multiplier
+  - RSSI properly converted from signed byte value
+  - Ping results now show accurate signal strength and quality metrics
+
+### Technical
+- Added `parseRawLogFrame()` function to handle 0x88 frame format: [SNR][RSSI][raw_packet...]
+- Modified frame handler to use new parser instead of `parseChannelMessageFrame()` for 0x88
+- SNR extracted from byte 0, divided by 4 to get actual value
+- RSSI extracted from byte 1, converted from unsigned to signed byte
+- Parser also extracts sender/repeater info from raw packet data when available
+- Added `_showSampleInfo()` dialog with GestureDetector on sample markers
+- Sample markers expanded to 16x16px tap targets with 8x8px visible circles
+
 ## [1.0.10] - 2026-01-11
 
 ### Added
