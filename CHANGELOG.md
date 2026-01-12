@@ -2,6 +2,35 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.12] - 2026-01-12
+
+### Fixed
+- **CRITICAL: Fixed sample data overwriting bug**
+  - Sample IDs now use timestamp + random number instead of timestamp + geohash
+  - Prevents samples at same location from having identical IDs and overwriting each other
+  - Database changed from REPLACE to IGNORE conflict algorithm to accumulate all samples
+  - Fixes issue where uploaded data appeared to replace existing webmap data
+- **Fixed coverage display showing floating point errors**
+  - Weighted values now rounded to 1 decimal place (1.2 instead of 1.2000000000000002)
+  - Received/Lost values on separate lines to prevent text overflow
+- **Map now centers on user's location on startup**
+  - Fixes issue where map always loaded at Seattle/default location
+  - Map automatically moves to GPS position when app opens
+
+### Added
+- **Color-coded sample markers**
+  - Green dots = Successful pings
+  - Red dots = Failed pings
+  - Blue dots = GPS-only samples (no ping attempt)
+  - Makes it easy to visually identify coverage at a glance
+
+### Technical
+- Added `_generateUniqueId()` function with random component
+- Changed `ConflictAlgorithm.replace` to `ConflictAlgorithm.ignore` in database
+- Added `_showGpsSamples` toggle for future GPS sample filtering
+- Coverage info dialog uses `toStringAsFixed(1)` and Flexible widgets
+- Map controller automatically moves to user position after `getCurrentLocation()`
+
 ## [1.0.11] - 2026-01-11
 
 ### Added
