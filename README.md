@@ -4,9 +4,12 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.12 APK](releases/meshcore_wardrive_v1.0.12.apk) (53.4 MB)
+**Latest Release:** [v1.0.15 APK](releases/meshcore_wardrive_v1.0.15.apk) (53.5 MB)
 
 **Previous Versions:**
+- [v1.0.14 APK](releases/meshcore_wardrive_v1.0.14.apk) (53.5 MB)
+- [v1.0.13 APK](releases/meshcore_wardrive_v1.0.13.apk) (51 MB)
+- [v1.0.12 APK](releases/meshcore_wardrive_v1.0.12.apk) (51 MB)
 - [v1.0.11 APK](releases/meshcore_wardrive_v1.0.11.apk) (53.4 MB)
 - [v1.0.10 APK](releases/meshcore_wardrive_v1.0.10.apk) (53.4 MB)
 - [v1.0.9 APK](releases/meshcore_wardrive_v1.0.9.apk) (53.4 MB)
@@ -175,6 +178,24 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.15 (2026-01-16)
+**New Features:**
+- 👁️ **Show Coverage Boxes toggle** - Hide/show coverage squares in settings
+- 🎯 **Smaller sample markers** - Reduced sample dot size by 25% for cleaner map display
+- 🗺️ Declutter the map by toggling coverage boxes on/off
+
+### v1.0.14 (2026-01-16)
+**Critical Fix:**
+- 🛠️ **FIXED: Repeater ID detection** - App now correctly identifies which repeater responded to pings
+- 📡 Proper parsing of mesh network routing paths to extract actual responding repeater
+- 🎯 Coverage squares and sample popups now show accurate repeater IDs
+- ✅ Fixes issue where wrong node IDs were being recorded in wardrive data
+
+### v1.0.13 (2026-01-12)
+**New Features:**
+- 👁️ **Show GPS Samples toggle** - Hide blue GPS-only markers to declutter map
+- 🗺️ Focus on ping results by toggling GPS samples on/off in settings
 
 ### v1.0.12 (2026-01-12)
 **Critical Fixes:**

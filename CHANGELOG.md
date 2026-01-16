@@ -2,6 +2,34 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.14] - 2026-01-16
+
+### Fixed
+- **CRITICAL: Fixed repeater ID detection to correctly identify responding repeaters**
+  - App now properly parses mesh network routing paths to extract actual repeater that echoed ping
+  - Coverage squares and sample markers now display accurate repeater IDs
+  - Fixes issue where incorrect node IDs were being recorded in wardrive data
+  - Improves accuracy of repeater tracking and coverage mapping
+
+### Technical
+- Enhanced path parsing logic to identify correct repeater from mesh routing information
+- Repeater ID extraction now validates against actual network topology
+- Sample data now contains accurate repeater attribution for coverage analysis
+
+## [1.0.13] - 2026-01-12
+
+### Added
+- **"Show GPS Samples" toggle in settings**
+  - Toggle to show/hide blue GPS-only sample markers
+  - Helps declutter map when you only want to see ping results
+  - Located in Settings → Show GPS Samples
+  - Subtitle explains "Show blue GPS-only markers"
+
+### Technical
+- Added SwitchListTile for GPS samples toggle in settings dialog
+- Existing filter logic in `_buildSampleLayer()` now accessible via UI
+- GPS-only samples (null pingSuccess) can be hidden with one tap
+
 ## [1.0.12] - 2026-01-12
 
 ### Fixed
