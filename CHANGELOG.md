@@ -14,12 +14,24 @@ All notable changes to MeshCore Wardrive will be documented in this file.
   - Reduced sample marker size by 25% (from 16px to 12px)
   - Sample dots are now less intrusive while remaining visible and tappable
   - Makes it easier to see the underlying map and coverage patterns
+- **Repeater friendly names on web map**
+  - App now uploads repeater friendly names (e.g., "Bob's Repeater") alongside node IDs
+  - Web map displays custom repeater names instead of just prefixes
+  - Names pulled from discovered repeaters and LoRa service contact cache
+  - Makes it easier to identify specific repeaters in coverage data
+
+### Fixed
+- **Web map resolution reset** - Fixed coverage square size resetting to default every 30 seconds during auto-refresh
+- **Web map repeater name escaping** - Fixed single quotes in repeater names breaking onclick handlers
 
 ### Technical
 - Added `_showCoverage` state variable with default value `true`
 - Added `getShowCoverage()` and `setShowCoverage()` methods to SettingsService
 - Coverage layers now conditionally render based on toggle state
 - Sample marker dimensions reduced from 16x16px to 12x12px (outer) and 8x8px to 6x6px (inner circle)
+- Upload service builds repeater names map from discovered repeaters and LoRa contact cache
+- Backend uses `sample.repeaterName` field if available, falls back to `nodeId`
+- Web map preserves user's selected resolution during auto-refresh
 
 ## [1.0.14] - 2026-01-16
 

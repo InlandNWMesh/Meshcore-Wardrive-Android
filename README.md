@@ -183,6 +183,7 @@ The more users contribute, the more accurate the coverage map becomes!
 **New Features:**
 - 👁️ **Show Coverage Boxes toggle** - Hide/show coverage squares in settings
 - 🎯 **Smaller sample markers** - Reduced sample dot size by 25% for cleaner map display
+- 📡 **Repeater friendly names on web map** - Map now displays custom repeater names instead of just node IDs
 - 🗺️ Declutter the map by toggling coverage boxes on/off
 
 ### v1.0.14 (2026-01-16)
