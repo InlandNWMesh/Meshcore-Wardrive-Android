@@ -2,6 +2,25 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.15] - 2026-01-16
+
+### Added
+- **"Show Coverage Boxes" toggle in settings**
+  - New toggle to show/hide coverage squares on the map
+  - Helps declutter the map when you only want to see sample points
+  - Located in Settings → Show Coverage Boxes
+  - Setting persists between app sessions
+- **Smaller sample markers for cleaner map display**
+  - Reduced sample marker size by 25% (from 16px to 12px)
+  - Sample dots are now less intrusive while remaining visible and tappable
+  - Makes it easier to see the underlying map and coverage patterns
+
+### Technical
+- Added `_showCoverage` state variable with default value `true`
+- Added `getShowCoverage()` and `setShowCoverage()` methods to SettingsService
+- Coverage layers now conditionally render based on toggle state
+- Sample marker dimensions reduced from 16x16px to 12x12px (outer) and 8x8px to 6x6px (inner circle)
+
 ## [1.0.14] - 2026-01-16
 
 ### Fixed
