@@ -2,6 +2,21 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.16] - 2026-01-17
+
+### Fixed
+- **CRITICAL: #meshwar channel discovery now searches all 40 channels instead of only 0-7**
+  - LoRa companion devices support up to 40 channels (0-39)
+  - Previously app would fail to connect if #meshwar was on channels 8-39
+  - Extended discovery timeout from 3 seconds to 6 seconds to handle more channels
+  - Fixes "#meshwar Not Found" error for users with channel on higher slots
+
+### Technical
+- Increased channel query loop from `i <= 7` to `i <= 39`
+- Updated channel discovery timeout from 3s to 6s
+- Updated empty slot search range from 1-7 to 1-39
+- Updated channels queried check from `>= 8` to `>= 40`
+
 ## [1.0.15] - 2026-01-16
 
 ### Added

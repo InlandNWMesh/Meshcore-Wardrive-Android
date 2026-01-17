@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.15 APK](releases/meshcore-wardrive-v1.0.15.apk) (53.5 MB)
+**Latest Release:** [v1.0.16 APK](releases/meshcore-wardrive-v1.0.16.apk) (53.5 MB)
 
 **Previous Versions:**
+- [v1.0.15 APK](releases/meshcore-wardrive-v1.0.15.apk) (53.5 MB)
 - [v1.0.14 APK](releases/meshcore_wardrive_v1.0.14.apk) (53.5 MB)
 - [v1.0.13 APK](releases/meshcore_wardrive_v1.0.13.apk) (51 MB)
 - [v1.0.12 APK](releases/meshcore_wardrive_v1.0.12.apk) (51 MB)
@@ -178,6 +179,13 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.16 (2026-01-17)
+**Critical Fix:**
+- 🔍 **FIXED: #meshwar channel discovery now searches all 40 channels**
+- 📡 Previously only searched channels 0-7, missing #meshwar on higher channels
+- ⏱️ Extended discovery timeout from 3s to 6s to accommodate more channels
+- ✅ Fixes connection issues for users with #meshwar on channels 8-39
 
 ### v1.0.15 (2026-01-16)
 **New Features:**
