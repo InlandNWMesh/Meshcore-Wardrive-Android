@@ -2,6 +2,37 @@
 
 All notable changes to MeshCore Wardrive will be documented in this file.
 
+## [1.0.17] - 2026-01-18
+
+### Added
+- **Portrait mode lock (true north orientation)**
+  - App now stays locked to portrait mode
+  - Map maintains true north orientation regardless of device rotation
+  - Uses `SystemChrome.setPreferredOrientations()` to lock orientation
+- **Unified tracking button**
+  - Play button now starts both GPS tracking and auto-ping together
+  - Single button press starts wardriving session
+  - Stop button stops both tracking and auto-ping simultaneously
+- **Simplified upload success message**
+  - Upload success dialog now shows just "Upload Complete"
+  - Error messages still show detailed information
+
+### Removed
+- **Auto-ping toggle switch**
+  - Removed separate toggle for auto-ping control
+  - Auto-ping now controlled exclusively by tracking button
+
+### Changed
+- Auto-ping automatically enables when tracking starts (if LoRa device is connected)
+- Tracking and auto-ping now have unified lifecycle
+- Success notification shows "Location tracking and auto-ping started" when both enabled
+
+### Technical
+- Added `flutter/services.dart` import for SystemChrome
+- Modified `_toggleTracking()` to control both tracking and auto-ping
+- Removed Switch widget from control panel UI
+- Simplified upload dialog content logic
+
 ## [1.0.16] - 2026-01-17
 
 ### Fixed

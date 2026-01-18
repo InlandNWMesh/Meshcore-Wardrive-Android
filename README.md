@@ -4,9 +4,10 @@ A mobile wardriving application for mapping MeshCore mesh network coverage in re
 
 ## 📥 Download
 
-**Latest Release:** [v1.0.16 APK](releases/meshcore-wardrive-v1.0.16.apk) (53.5 MB)
+**Latest Release:** [v1.0.17 APK](releases/meshcore-wardrive-v1.0.17.apk) (53.5 MB)
 
 **Previous Versions:**
+- [v1.0.16 APK](releases/meshcore-wardrive-v1.0.16.apk) (53.5 MB)
 - [v1.0.15 APK](releases/meshcore-wardrive-v1.0.15.apk) (53.5 MB)
 - [v1.0.14 APK](releases/meshcore_wardrive_v1.0.14.apk) (53.5 MB)
 - [v1.0.13 APK](releases/meshcore_wardrive_v1.0.13.apk) (51 MB)
@@ -179,6 +180,17 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.17 (2026-01-18)
+**New Features:**
+- 📱 **Portrait mode lock** - App stays in true north orientation, no longer rotates with device
+- 🎮 **Unified tracking button** - Play button now starts both GPS tracking AND auto-ping together
+- ✅ **Simplified upload message** - Success dialog now shows just "Upload Complete"
+
+**Changes:**
+- ❌ Removed auto-ping toggle switch - now controlled by tracking button
+- 🚀 Auto-ping automatically starts when tracking starts (if LoRa device connected)
+- 🛑 Both tracking and auto-ping stop together when pressing stop
 
 ### v1.0.16 (2026-01-17)
 **Critical Fix:**
