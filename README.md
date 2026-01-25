@@ -150,10 +150,6 @@ See [pubspec.yaml](pubspec.yaml) for complete list.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-[Specify your license here]
-
 ## 🙏 Credits
 
 Built for the MeshCore mesh networking community.
