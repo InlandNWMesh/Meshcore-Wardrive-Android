@@ -64,6 +64,7 @@ class LoRaCompanionService {
   final _random = Random();
   int? _batteryPercent;
   final _batteryController = StreamController<int?>.broadcast();
+  StreamSubscription? _connectionStateSubscription;
   
   
   // Track pending contact requests
@@ -234,6 +235,14 @@ class LoRaCompanionService {
             ? device.platformName 
             : device.remoteId.toString();
         print('Connected to LoRa device via Bluetooth');
+        
+        // Monitor connection state for disconnection
+        _connectionStateSubscription = device.connectionState.listen((state) {
+          print('Bluetooth connection state: $state');
+          if (state == BluetoothConnectionState.disconnected) {
+            _handleBluetoothDisconnection();
+          }
+        });
         
         // Enable BLE mode in protocol parser (unwrapped frames)
         _protocol.setBLEMode(true);
@@ -1202,9 +1211,39 @@ class LoRaCompanionService {
   // DISCONNECT
   // ============================================================================
 
+  /// Handle unexpected Bluetooth disconnection
+  void _handleBluetoothDisconnection() {
+    print('⚠️ Bluetooth device disconnected unexpectedly');
+    _debugLog.logError('Bluetooth disconnected');
+    
+    _stopBatteryMonitoring();
+    _connectionStateSubscription?.cancel();
+    _deviceSubscription?.cancel();
+    
+    _bluetoothDevice = null;
+    _txCharacteristic = null;
+    _rxCharacteristic = null;
+    _connectionType = ConnectionType.none;
+    _deviceName = null;
+    
+    // Fail any pending pings
+    for (final entry in _pendingPings.entries) {
+      if (!entry.value.isCompleted) {
+        entry.value.complete(PingResult(
+          timestamp: DateTime.now(),
+          status: PingStatus.failed,
+          error: 'Bluetooth connection lost',
+        ));
+      }
+    }
+    _pendingPings.clear();
+    _pingResponses.clear();
+  }
+
   Future<void> disconnectDevice() async {
     try {
       _stopBatteryMonitoring();
+      await _connectionStateSubscription?.cancel();
       await _deviceSubscription?.cancel();
       
       if (_connectionType == ConnectionType.bluetooth && _bluetoothDevice != null) {
@@ -1218,6 +1257,8 @@ class LoRaCompanionService {
       _rxCharacteristic = null;
       _usbPort = null;
       _connectionType = ConnectionType.none;
+      _deviceName = null;
+      _connectionStateSubscription = null;
       print('LoRa device disconnected');
     } catch (e) {
       print('Error disconnecting device: $e');

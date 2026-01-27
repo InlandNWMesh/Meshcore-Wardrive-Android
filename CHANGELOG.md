@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.0.24 - 2026-01-26
+
+### Added
+- **Bluetooth Disconnection Detection**: App now detects when Bluetooth connection to LoRa device is lost
+  - Automatically fails any pending pings with "Bluetooth connection lost" error
+  - Updates UI within 5 seconds to show disconnected state
+  - Manual ping button becomes unavailable when disconnected
+  - Prevents confusing "ping failed" messages when connection is lost mid-ping
+
+### Fixed
+- Manual ping now shows clear error message when Bluetooth disconnects unexpectedly
+- Pending pings are properly cleaned up when connection is lost
+- Connection status UI accurately reflects current Bluetooth state
+
+## v1.0.23 - 2026-01-26
+
+### Added
+- **App Version Tracking**: Coverage data uploaded to the web map now includes app version information
+  - Web map displays which app version was used to collect each coverage area
+  - Visible in coverage square popups as "App Version: 1.0.XX"
+  - Helps track data quality and identify issues with specific versions
+  - App versions before this release will show as UNKOWN
+  
+### Technical
+- Centralized version constant in `lib/constants/app_version.dart`
+  - Single source of truth for version number across app and uploads
+  - Automatically included in all sample uploads
+
 ## v1.0.22 - 2026-01-25
 
 ### Fixed

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_service.dart';
 import '../models/models.dart';
+import '../constants/app_version.dart';
 
 class UploadService {
   bool _isDefaultEndpoint(String url) {
@@ -87,6 +88,7 @@ class UploadService {
         'snr': sample.snr,
         'pingSuccess': sample.pingSuccess,
         'timestamp': sample.timestamp.toIso8601String(),
+        'appVersion': appVersion, // App version from constants
       }).toList();
       
       // Debug: log first 3 samples

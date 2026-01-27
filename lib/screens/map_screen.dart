@@ -24,6 +24,7 @@ import 'package:share_plus/share_plus.dart';
 import 'debug_log_screen.dart';
 import 'debug_diagnostics_screen.dart';
 import '../main.dart';
+import '../constants/app_version.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -33,7 +34,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  static const String appVersion = '1.0.22';
+  // App version is imported from constants/app_version.dart
   
   final LocationService _locationService = LocationService();
   final MapController _mapController = MapController();
