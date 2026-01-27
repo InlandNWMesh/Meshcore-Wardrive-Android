@@ -1,0 +1,207 @@
+MESHCORE WARDRIVE - PROJECT INFORMATION
+=======================================
+
+VERSION: 1.0.17 (Development Branch)
+CREATED: 2026-01-18
+PURPOSE: Android wardrive app for mapping MeshCore mesh network coverage
+
+OVERVIEW
+--------
+MeshCore Wardrive is a Flutter/Dart Android application that tracks GPS location
+and sends pings via LoRa mesh network to map coverage areas. It connects to a
+LoRa companion device (via USB or Bluetooth) and uploads data to a web map.
+
+PROJECT STRUCTURE
+-----------------
+meshcore_wardrive_dev/
+├── lib/
+│   ├── main.dart                          # App entry point, portrait lock
+│   ├── models/
+│   │   └── models.dart                    # Data models (Sample, Repeater, etc.)
+│   ├── screens/
+│   │   ├── map_screen.dart                # Main UI (map, controls, settings)
+│   │   ├── debug_log_screen.dart          # Debug terminal
+│   │   └── debug_diagnostics_screen.dart  # Diagnostic logs
+│   ├── services/
+│   │   ├── location_service.dart          # GPS tracking, sample management
+│   │   ├── lora_companion_service.dart    # LoRa device communication
+│   │   ├── meshcore_protocol.dart         # MeshCore protocol implementation
+│   │   ├── database_service.dart          # SQLite local storage
+│   │   ├── upload_service.dart            # Upload to web map API
+│   │   ├── settings_service.dart          # App settings persistence
+│   │   └── aggregation_service.dart       # Coverage cell aggregation
+│   └── utils/
+│       └── geohash_utils.dart             # Geohash encoding utilities
+├── android/                               # Android native code
+├── pubspec.yaml                           # Flutter dependencies
+└── CHANGELOG.md                           # Version history
+
+KEY COMPONENTS
+--------------
+
+1. LOCATION SERVICE (location_service.dart)
+   - GPS tracking with foreground service
+   - Auto-ping management (distance-based intervals)
+   - Sample collection and storage
+   - Integrates with LoRa companion for pings
+
+2. LORA COMPANION SERVICE (lora_companion_service.dart)
+   - USB/Bluetooth device connection
+   - Channel discovery (searches channels 0-39 for #meshwar)
+   - Ping operations via channel messages
+   - Frame parsing (0x89, 0x88, 0x87, etc.)
+   - Contact list management for repeater names
+
+3. MAP SCREEN (map_screen.dart)
+   - Interactive map with coverage visualization
+   - Unified tracking button (starts both GPS + auto-ping)
+   - Manual ping button
+   - Settings panel
+   - Repeater discovery display
+
+4. DATABASE SERVICE (database_service.dart)
+   - SQLite database for sample storage
+   - Schema: id, latitude, longitude, timestamp, path (repeater ID), 
+            geohash, rssi, snr, pingSuccess
+
+5. UPLOAD SERVICE (upload_service.dart)
+   - Uploads samples to Cloudflare Pages API
+   - Includes repeater friendly names
+   - Default URL: https://meshwar-map.pages.dev/api/samples
+
+CURRENT STATE (v1.0.17)
+-----------------------
+New Features:
+- Portrait mode lock (true north) - no screen rotation
+- Unified tracking button - one press starts GPS + auto-ping
+- Simplified upload success message ("Upload Complete")
+
+Changes:
+- Removed separate auto-ping toggle switch
+- Auto-ping starts automatically with tracking (if LoRa connected)
+- Both stop together
+
+PING MECHANISM
+--------------
+Current Implementation:
+1. User starts tracking → auto-ping enabled (if LoRa connected)
+2. Location service triggers pings based on distance interval
+3. Ping sent as channel message on #meshwar channel
+4. Repeaters echo the message back
+5. App listens for 0x88 frames (raw radio log) or 0x89 (channel message)
+6. Extracts repeater ID from packet path field
+7. Saves sample with GPS coords, RSSI, SNR, repeater ID
+
+Channel Discovery:
+- Scans channels 0-39 on connection
+- Searches for channel with "meshwar" in name
+- Uses channel encryption key for messages
+- 6 second timeout for discovery
+
+IMPORTANT FILES FOR PING CHANGES
+---------------------------------
+1. lora_companion_service.dart (lines 729-850)
+   - ping() method
+   - Channel message creation
+   - Response parsing
+
+2. meshcore_protocol.dart
+   - createChannelMessagePayload()
+   - parseChannelMessageFrame()
+   - parseRawLogFrame()
+   - Encryption/decryption
+
+3. location_service.dart (lines 200-350)
+   - Auto-ping trigger logic
+   - Distance-based interval checks
+   - Sample creation from ping results
+
+SETTINGS
+--------
+Configurable:
+- Ping interval: 50m, 200m, 0.5mi (805m), 1mi
+- Coverage resolution: Precision 4-8 (20km to 38m squares)
+- Ignored repeater prefix (filter mobile repeaters)
+- Show/hide: Coverage boxes, samples, edges, repeaters, GPS samples
+- Color mode: Quality (signal) or Age (freshness)
+- Theme: Light/Dark/System
+
+Persisted via SharedPreferences in settings_service.dart
+
+WEB MAP INTEGRATION
+-------------------
+Backend: Cloudflare Pages Function (meshcore-map-site)
+Storage: Cloudflare KV (geohash-based aggregated coverage)
+Format: JSON with repeaterName field for friendly names
+Live map: https://meshwar-map.pages.dev
+
+Data uploaded includes:
+- nodeId (repeater ID)
+- repeaterName (friendly name if available)
+- latitude/longitude
+- rssi/snr
+- pingSuccess (boolean)
+- timestamp
+
+DEPENDENCIES
+------------
+Key packages:
+- flutter_map: ^7.0.2 (interactive map)
+- latlong2: ^0.9.1 (coordinates)
+- geolocator: ^13.0.2 (GPS)
+- usb_serial: ^0.5.2 (USB connection)
+- flutter_blue_plus: ^1.32.12 (Bluetooth)
+- sqflite: ^2.3.3 (local database)
+- geohash_plus: ^1.0.3 (geohashing)
+- flutter_foreground_task: ^8.11.0 (background tracking)
+
+BUILD COMMANDS
+--------------
+Clean:    flutter clean
+Build:    flutter build apk --release
+Output:   build/app/outputs/flutter-apk/app-release.apk
+Test:     flutter run (debug mode)
+
+GIT REPOSITORIES
+----------------
+Main project: meshcore_wardrive/ (production stable)
+Dev branch:   meshcore_wardrive_dev/ (this directory)
+Releases:     meshcore_wardrive_releases/ (APK releases + docs)
+Web map:      meshcore-map-site/ (Cloudflare Pages backend)
+
+KNOWN ISSUES
+------------
+None currently - v1.0.17 is stable
+
+TODO FOR PING OVERHAUL
+----------------------
+(Document your planned changes here)
+
+TESTING CHECKLIST
+-----------------
+- [ ] USB device connection
+- [ ] Bluetooth device connection  
+- [ ] Channel discovery (#meshwar on various channel numbers)
+- [ ] Manual ping
+- [ ] Auto-ping trigger on distance intervals
+- [ ] Repeater response detection
+- [ ] RSSI/SNR parsing
+- [ ] Sample storage
+- [ ] Upload to web map
+- [ ] Repeater friendly names display
+- [ ] Portrait lock
+- [ ] Unified tracking button behavior
+
+CONTACT
+-------
+GitHub: https://github.com/mintylinux/Meshcore-Wardrive-Android
+Web map: https://meshwar-map.pages.dev
+
+NOTES
+-----
+- #meshwar channel must exist on device before connection
+- LoRa companion supports up to 40 channels (0-39)
+- Ping timeout: 20 seconds
+- Coverage precision default: 6 (~1.2km squares)
+- Database location: Android app data directory
+- Foreground service required for background tracking on Android 13+

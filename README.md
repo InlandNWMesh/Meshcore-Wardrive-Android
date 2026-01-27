@@ -1,6 +1,12 @@
 # MeshCore Wardrive
 
-A mobile wardriving application for mapping MeshCore mesh network coverage in real-time.
+A Flutter-based Android application for mapping MeshCore mesh network coverage in real-time.
+
+## 📥 Downloads
+
+**Latest Release APK:** Available in the [releases](releases/) folder
+
+**Source Code:** [Meshcore-Wardrive-Android-Source](https://github.com/mintylinux/Meshcore-Wardrive-Android-Source)
 
 ## 🚀 Quick Start
 
@@ -306,6 +312,16 @@ For issues, questions, or feature requests:
 - Open an issue on GitHub
 - Check existing issues for solutions
 
+## 🛠️ Development
+
+For developers who want to build from source, see the [source code repository](https://github.com/mintylinux/Meshcore-Wardrive-Android-Source) which includes:
+
+- Complete Flutter project structure
+- Development setup instructions
+- Build configuration
+- Architecture documentation
+- Contributing guidelines
+
 ## 📄 License
 
 [Specify your license here]
@@ -314,6 +330,16 @@ For issues, questions, or feature requests:
 
 Built for the MeshCore mesh networking community.
 
+## 📧 Support
+
+For issues and questions:
+- Open an issue on GitHub
+- Check existing documentation in the repository
+
 ---
+
+**Current Version:** 1.0.24
+
+**Minimum Android Version:** Android 5.0 (API 21)
 
 **Happy Wardriving! 🚗📡**

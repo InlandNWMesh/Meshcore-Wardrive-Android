@@ -1,0 +1,500 @@
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: PSR_South (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 af d7 dc 4a d2 97 01 10 46 95 0c d4 c8 7f 74 c8 b3 1c 8d...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: Stevens ð«  (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 c3 3a b4 33 fb 8a d1 23 97 b7 22 ca d5 4c 65 55 7d 80 aa...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: Silver Firs Repeater (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 9e b7 78 93 e5 83 80 6e d1 4f 9e 96 60 72 a3 cc 93 15 c4...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: K7BA Repeater (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 6d cc 53 03 71 46 a3 31 b2 66 5a 60 8a a0 0b 25 f8 db a2...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: 6DCC5303 (type: 1)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 f3 bc c6 79 43 c0 7d 4c 22 9d 58 d9 e8 4f a3 e9 0d 66 3a...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: Dogbane Repeater (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 6b 96 af 12 eb cf 5f 4f 7f 40 c5 03 2d 1b f7 e4 e2 89 cb...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: ð¿ Not a Squirrel (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 07 b1 9c 5c 24 0c 03 a8 7e 07 23 52 85 f6 10 56 0e 96 90...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: JX ð­ (type: 3)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 13 37 14 25 ae 08 e7 d3 1d 1b b8 98 5a b6 10 a1 34 2b cd...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: Airhack NormandyPark (type: 2)
+[16:33:13] [LoRa] 📶 Raw RX: 148 bytes - 03 cf 38 d6 a7 2e e3 2e 1b 64 fa ab f1 cd cc 07 1c 1d 46 60...
+[16:33:13] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:13] [INFO] Contact: VA7NAP-REPEATER (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 89 96 a1 0e 3a d2 6a d0 17 23 73 5d c7 15 d6 ff 86 c8 1c...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: ð // QE Park Solar (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 5f ea 39 3b 14 e0 1e 17 36 f6 f0 35 89 8a 28 43 d8 27 f7...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: Robop (pw hello) (type: 3)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 f6 64 23 73 6c 43 00 7f 72 dc c3 3c 82 02 e1 ce 48 f7 0a...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: Vine Maple Repeater (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 c3 57 d7 93 4f 50 3c e7 9f 30 43 67 50 4a 6d a7 c8 8e 16...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: *Decay Repeater (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 e4 68 72 5b 57 c7 38 65 b8 b1 cd 00 cb 78 7b f3 41 3a 87...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: ChickNet Repeater (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 fd cd f4 78 77 9d af 85 19 9b 37 ba af 05 c7 fe 53 d7 c1...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: ð ded âï¸ (type: 1)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 18 88 cc d1 d0 27 3f a1 90 5a 3d 36 0f 18 ab 70 ae d4 85...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: SB Newport Hills (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 43 d4 24 84 8e d0 63 63 5d fd 25 bd e9 87 75 60 4f ec d1...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: SCOM-HOME (type: 1)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 85 44 b0 ca f7 2a 45 44 74 02 e3 8c 36 c9 8a b8 0f 26 14...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: Holman Basin ð§ (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 cc fd 74 12 2c 10 65 cd 79 b4 d2 39 ba 33 76 d2 f0 92 b8...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: WA7JNJ RAK  (type: 1)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 15 f8 9f 9b 55 76 8d 62 3e bf 76 62 70 fa da 7f 82 9a 46...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: Mystik Mobile Repeater (type: 2)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 1a f3 c3 87 4e 1f 4a 4b 81 83 ea a8 58 26 d5 c0 1a 02 a0...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: ð¶WO0F (type: 1)
+[16:33:14] [LoRa] 📶 Raw RX: 148 bytes - 03 6e f9 0c 1a ce 80 78 48 ce cc 4a 61 56 d0 e8 07 4f 31 6c...
+[16:33:14] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:14] [INFO] Contact: NJM1 (type: 1)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 85 66 59 b2 f7 30 f5 34 b9 30 3d 5d 52 20 77 f4 1b 45 9f...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: KM7AKT-7 (type: 1)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 65 f4 1c 84 7b 5d ad f5 d9 f3 ad 6f 8b 2f 9f a0 c9 e7 bb...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: C2903T-N T114 (type: 2)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 e1 59 44 ab e4 a5 a2 8f b5 d8 75 0f 2d cd 34 b4 90 cb 41...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: UBC EM RS A (type: 3)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 23 89 7a 04 69 91 dd 15 4e d9 d5 5a 58 3b 73 89 a5 57 af...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: The Brewery (type: 2)
+[16:33:15] [INFO] ✅ Added to map: The Brewery at (47.510719, -122.182373)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 22 17 36 c0 59 37 ec b3 c6 82 ef 9d 4b bd d7 ce b4 9a 62...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: STLNew (type: 2)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 a6 8f 05 f0 ec a2 0c 93 24 c7 5d 5e d5 c6 89 75 d2 60 5c...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: DMA.Space/Mesh (type: 2)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 3f 3c e8 a8 01 36 6c 72 c7 3f 2e 54 61 7f 95 f8 ce b5 f2...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: K9BDC-T (type: 1)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 45 61 2a aa 2d 06 65 0b 94 ff 6d 6e a8 5c 99 0e a2 35 61...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: Hollyð¿Flower (type: 1)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 59 68 ca 8c 92 8b dc ee 5c c0 e2 7f 33 de 05 06 0d 88 bc...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: MDB-Riley Park Room (type: 3)
+[16:33:15] [LoRa] 📶 Raw RX: 148 bytes - 03 0c a9 7b 7b 82 3f e2 bc 36 cb f4 6c c5 b9 18 37 dc bb cb...
+[16:33:15] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:15] [INFO] Contact: Aurora Village ð (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 62 23 e6 1f 1f db ec 5e 99 8f 3f 2f 5a f4 92 d3 7e 01 cf...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: FOX ISLAND S. Repeater (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 89 d6 56 eb 1f 46 67 3f f2 14 e0 29 7c f5 fa cb 8e 96 e2...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Auburn (Soon) (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 3b 74 57 a1 4d 5a a5 68 ed e0 62 b1 aa b2 e5 d9 80 d4 9e...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: ð®TacoBot (type: 1)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 04 a5 d1 1f 03 e3 f3 91 b2 e2 79 4e 45 44 62 35 69 8a d9...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: GRIM_TBS (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 77 73 d0 e2 15 f0 f1 f4 e2 7d 16 48 20 3a ae 62 f5 2e 92...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: SEA Bellevue: TamO (type: 2)
+[16:33:16] [INFO] ✅ Added to map: SEA Bellevue: TamO at (47.621809, -122.102805)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 30 8f 6c 16 c3 f3 d6 3f bd 14 f0 7b 2b 8f 79 8e 27 af 61...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Calvary Lutheran (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 4f aa 96 ed 4c 2b 1b a4 b4 21 41 47 54 ff 84 ee 8f d3 68...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Airhack Keið»Mobile (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 a8 b9 55 4c 75 53 4e f7 2b e6 7c 8c 4d 59 98 0d a9 65 4f...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Lo Bak Ko RmPtr (type: 3)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 9e 7d a3 df d5 cd bf 63 d0 26 d3 b9 6b 0c 87 36 ad 3c 4e...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Mojo Repeater (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 5a 0c ff 5d 9b bd bf 45 89 3c e9 ae 60 cd d7 f1 11 64 ff...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Monkshood Repeater (type: 2)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 94 e2 5a 8c 83 d9 14 ea 06 6e e2 9d ee 05 f5 db 39 13 ea...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Lulu_Go (type: 1)
+[16:33:16] [LoRa] 📶 Raw RX: 148 bytes - 03 5e 52 c2 1e 70 e4 40 4a 09 11 a3 93 a5 56 1d dc 6b 06 ad...
+[16:33:16] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:16] [INFO] Contact: Lilly_Go (type: 1)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 1e a5 e1 95 2c 93 7a 55 15 1d 6f c4 8b c8 c1 fd 56 04 fb...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: First Hill ð¥ (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 90 e7 fd 7e ff 57 a7 19 71 fd 67 45 02 6f 84 e3 7f 37 c9...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: Solstice Park (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 b2 78 af 04 4a f2 f0 72 78 43 34 e0 8e 39 de 4b bc 53 fb...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: TK421 Beacon Barclift (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 43 ba f1 68 87 57 97 fe 4b 46 50 e0 2f 38 d5 07 98 b6 76...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: Ravenna Valley (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 b8 2a ba b4 6e a7 c8 23 60 99 c4 51 6e 46 6b 5c 54 70 30...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: *Bigelow N (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 5b 6f e3 bf de 41 20 6c e7 e2 47 1a d1 e2 97 e4 af 34 9b...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: BLDG40 (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 29 72 16 49 98 32 62 b7 c3 fd d5 84 f8 16 24 e4 b9 d8 ab...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: 1311919 Room Server (type: 3)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 38 4a 84 4c 52 c7 3d 20 84 c2 a3 f2 9f 0b f5 45 69 06 5a...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: University Districtð (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 77 df 4b 39 00 69 93 fe 89 59 c5 45 04 b6 81 1c 29 d8 74...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: ingot (type: 1)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 c6 ff d0 58 d2 e3 a5 d8 2b cc ab f9 51 a7 5c 8f 40 dd 32...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: SoLR T114 (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 df eb 9a 7b 4c 29 19 a5 65 8d 3b cc 6a 13 81 91 d9 dc 3d...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: WW7STR/PugetMesh Tenino (type: 2)
+[16:33:17] [LoRa] 📶 Raw RX: 148 bytes - 03 c0 18 ca e8 f2 f4 d7 cc 16 94 60 e6 90 9e fd 68 a7 82 2d...
+[16:33:17] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:17] [INFO] Contact: VE7LSE Mobile (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 53 19 24 65 8a a7 4c 32 63 ed b9 67 08 ca d7 44 63 fb 5c...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Ladysmith ð² (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 ea 3c 1b 9e bf 0b bd 65 bf 71 e3 4a 99 84 00 5b 1f b9 eb...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Eastlake ð¤ (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 f4 43 d4 14 00 5f b1 fb d6 6a af d5 4a 64 95 07 b9 dd 7a...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: pippi (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 05 f7 f1 57 e6 d6 85 45 bc 41 0a fc 3a fe 25 27 b6 9d 24...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: N7JMV-UNIONHILL-RP (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 f6 f0 6b ac 2c be 9a 2a 50 23 d4 45 56 50 90 23 a6 28 b0...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: DazzleViking Greenwood  (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 d2 69 50 0f c1 09 eb 83 4a d0 e3 50 af 38 94 a9 7a 98 e8...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Tae's BBS (type: 1)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 ad 0c 2f b2 75 12 56 2f b5 5e 9f 60 d2 53 58 84 d1 63 10...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Downtown Lounge (type: 3)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 c5 1d ee c0 7a 23 ce 75 8d 06 5f af b3 a7 90 14 e7 5a e0...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Cisien Station (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 75 1a 1c 96 89 ae 50 62 f4 e0 28 fa 5d e2 5f ba 97 4f 93...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Powerline Trail (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 32 44 5a bc ba a4 69 89 15 5d 97 89 fd 4f 9f 57 51 74 31...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: Can O Mesh 1 ð¥« (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 43 59 b7 3e 59 76 ad 15 9a 04 60 13 36 ee fd f5 4d 7b d1...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: SW Columbia City (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 e0 ee d9 b6 b1 f4 4d f1 04 e6 4c cf 45 58 f9 3d 80 7a ed...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: N7JMV/WA7LAW-EVERETT-RP (type: 2)
+[16:33:18] [LoRa] 📶 Raw RX: 148 bytes - 03 20 8d 98 90 2a d4 27 79 9d f4 c0 1a f0 59 c5 d7 9a 75 2b...
+[16:33:18] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:18] [INFO] Contact: L311M (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 53 77 12 dc 0b 7c b1 89 e8 26 41 fb 73 cb b2 1f fb c7 26...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: ð¦ Hootie Hoo Tag (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 f4 4d d6 e8 9e 6f a4 ba b9 c0 ce 2d fd 07 c5 74 fb 52 bc...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: UBCV//Zenith (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 f5 b5 7a 3e 05 18 b6 65 f0 c3 82 82 9e cd c2 c7 99 0e 94...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: UBCV//F5 (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 0b 96 62 cc 3a 07 08 3c 1c 7e d6 8c a2 78 44 4d c2 39 57...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: J4G7 (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 4e 29 8f bd c3 c4 a9 ad e4 cd 5f e2 89 7b 8e 83 45 6c 7e...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: MDB-MP-Repeater (type: 2)
+[16:33:19] [INFO] ✅ Added to map: MDB-MP-Repeater at (49.265648, -123.101329)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 04 9e 08 b5 c2 2b d1 23 46 e5 13 5e 49 30 c3 cb ee 43 64...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: SolarXaioAdvanced (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 04 72 ae 0f 77 f3 93 5d a6 72 c7 2d 8f 8f 2d f1 0a 59 b4...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: Mid-Beacon PP Repeater (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 69 30 3c 93 d4 a2 f7 61 36 6d 27 9f 25 0d 33 be a6 71 e3...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: C. Everett - MagicPants (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 cb 48 30 94 f1 01 ce 73 bc 4e c9 43 81 b6 70 66 f3 96 46...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: NNI 1 (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 ba dc 0d e6 ba 17 cf 89 3a 02 1f 78 60 c2 dc bd cd d0 ab...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: RTð (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 c9 01 42 61 b4 ce 3f aa 1c 4d d1 e9 65 85 b4 b4 e6 d0 98...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: VE7NA - Mt Copley â° (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 18 0f 6b aa a7 7a b4 42 64 31 b7 6b 0d 1c a4 41 51 bb 56...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: N7YD-2 (type: 1)
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 dd e2 b9 7c 83 b6 5e 91 72 af ae 1b bf a0 e3 5b 89 1b 52...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: KK7VNR Roof Repeater (type: 2)
+[16:33:19] [LoRa] 📶 Raw RX: 77 bytes - 88 2f bf 15 05 41 ba 1c 86 11 11 bc e1 30 a6 0d a2 ed 62 09...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x88 (136) len=76
+[16:33:19] [LoRa] Unhandled frame type: 0x88
+[16:33:19] [LoRa] 📶 Raw RX: 1 bytes - 83
+[16:33:19] [LoRa] 📥 RX Frame: code=0x83 (131) len=0
+[16:33:19] [LoRa] Unhandled frame type: 0x83
+[16:33:19] [LoRa] 📶 Raw RX: 148 bytes - 03 8f 67 e5 bb f6 34 f8 b7 6c 4e 0f 77 10 7d eb 6f bb 45 e5...
+[16:33:19] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:19] [INFO] Contact: Bear Den | Squamish DT (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 fb fb fb fb c1 f0 c3 20 91 1d f5 0b a3 f5 3d 47 71 72 7f...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: Rainier View SolarPtr (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 f2 ba 24 a0 aa 67 c2 82 7a 21 33 40 f9 d1 4f 69 2b 8b 29...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: UBCV//Maple (type: 2)
+[16:33:20] [INFO] ✅ Added to map: UBCV//Maple at (49.263742, -123.255028)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 6a af 65 1d a9 45 1b 96 e9 72 a0 eb b3 c5 bc 02 6f 8e 72...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: mascat-2way (type: 1)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 ee dc f9 8e ce a7 4a 8c f9 26 00 26 b0 cc e1 e0 9a 69 81...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: MagicPants @ ð¡ (type: 1)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 46 7b 04 75 ad 1e a9 b4 5c 42 d0 a4 cb 9d 72 0f f9 b4 35...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: N7OEP Pager (type: 1)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 12 ef 16 d9 7b 64 a2 af 4b be 28 f8 f7 cd 45 7f c9 39 ce...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: VE7YEG-TD (type: 1)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 fe d4 04 e0 98 f3 b1 fd ce 5c f9 5b c9 b3 bc ce a7 27 98...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: CapHill (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 78 bytes - 88 31 a8 15 06 41 ba 1c 86 11 ba 11 bc e1 30 a6 0d a2 ed 62...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x88 (136) len=77
+[16:33:20] [LoRa] Unhandled frame type: 0x88
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 3f a0 02 a5 02 c7 58 64 0c 74 b9 a1 c0 69 89 31 08 02 13...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: Kidisgod Repeater (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 72 9c 99 c0 1a e5 78 bf c4 e2 e0 a7 95 90 d3 b1 56 b2 e2...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: White Center South ð® (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 78 bytes - 88 2f 9f 15 06 41 ba 1c 86 11 8a 11 bc e1 30 a6 0d a2 ed 62...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x88 (136) len=77
+[16:33:20] [LoRa] Unhandled frame type: 0x88
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 1d 94 87 37 cb af 1c 6c 06 d7 17 17 bf 5d ef 82 74 e0 82...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: ~guerrilla/ (type: 3)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 d6 66 39 72 6e 1a 73 33 40 14 60 7c e9 c7 e1 bd 97 5b 74...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: devhack Room Pw hello (type: 3)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 2e 24 a6 45 a2 5c 31 b3 26 77 ba eb f3 81 44 b7 35 d3 4b...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: SCOM-NORTH.BEND (type: 2)
+[16:33:20] [LoRa] 📶 Raw RX: 148 bytes - 03 11 53 bc 4f 8e 11 fe e4 75 2e c6 55 ec f7 ed de e9 fb 18...
+[16:33:20] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:20] [INFO] Contact: DN-Redmond (Grass Lawn) (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 60 96 bc fa 4e 8d 28 89 29 45 ed ba 84 cf d4 cf 56 c1 4e...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Lopa 808 ð (type: 1)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 b6 ca 2b b5 23 dc dd 82 f1 4d 56 31 a4 22 23 a4 9c 03 2e...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: SoperHillRepeater (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 96 5e 3b b8 9f 10 69 c0 cc 8f b7 eb fd 2b d9 6c 4e 7f d8...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: West Sea - Alki Heights (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 fc 76 0d 9e 37 a4 a9 d2 e7 bc c7 5c d3 be 01 92 70 dd 78...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: skyc4t3 (type: 1)
+[16:33:21] [LoRa] 📶 Raw RX: 78 bytes - 88 2f c4 15 06 41 ba 1c 86 11 84 11 bc e1 30 a6 0d a2 ed 62...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x88 (136) len=77
+[16:33:21] [LoRa] Unhandled frame type: 0x88
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 ae db 69 5d 05 81 48 7a 9f f3 c4 c5 f3 af 7c 57 3a 87 e7...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Washington Park ð³ (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 35 4f 44 10 3e 1e b5 ed 76 14 00 48 d6 cc 7f 9e 2a fb c0...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Henderson Bay / Purdy (type: 2)
+[16:33:21] [INFO] ✅ Added to map: Henderson Bay / Purdy at (47.37435, -122.6233)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 6e c4 d6 a1 37 4b b8 c9 66 5c 6a e6 84 54 c3 63 63 0c 8b...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: W7ITL-IKOKA-RPT (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 11 a9 58 db 7f 92 36 cb e2 3d 09 b3 4d cd cc 64 4e 9c f7...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Helios Repeater (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 31 e9 7d ff a8 63 7a f1 5b 2d ef 26 a0 fb 4b 22 09 63 e3...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Sunnyslope Repeater (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 0b ef c8 e8 2c 74 e7 58 1a 6b c7 6f 27 ff d2 b0 45 05 64...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Wen-W (Repeater) (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 ed 8f f4 97 d9 0e 18 95 fa bf 46 cc e7 aa e4 94 ac 49 b6...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Stomb (type: 1)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 ba d5 dc 49 90 bb 21 7a 74 e6 74 94 e2 e6 d7 66 56 a1 1e...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Xtreme Repeater (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 b1 9c 7c b2 2f 88 21 0b 52 54 9d b4 1d 48 79 a5 e0 82 65...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Secret Squirrel Shit (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 cb d6 5c 99 d4 08 a0 65 9e 4c e4 6c 81 fa 65 70 53 dc aa...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Holly Repeater V4 (type: 2)
+[16:33:21] [LoRa] 📶 Raw RX: 148 bytes - 03 83 51 e8 3f 19 30 12 91 02 c8 d2 c8 a4 f8 69 6e 80 df 59...
+[16:33:21] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:21] [INFO] Contact: Rainier Vista Ridge (type: 2)
+[16:33:22] [LoRa] 📶 Raw RX: 148 bytes - 03 1a 19 c0 a2 42 ab 0f df fb 2f c4 b5 9f 78 18 e4 5e 42 49...
+[16:33:22] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:22] [INFO] Contact: guerrilla.radio (type: 2)
+[16:33:22] [LoRa] 📶 Raw RX: 148 bytes - 03 ae 92 58 cf c0 1e e2 10 2f b8 96 c4 0d 26 7b 54 44 20 0a...
+[16:33:22] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:22] [INFO] Contact: Flightless Esperance (type: 2)
+[16:33:22] [LoRa] 📶 Raw RX: 148 bytes - 03 8c a9 2f 38 7c 8c af a1 d7 a8 b1 8e 37 1e c2 03 b2 21 07...
+[16:33:22] [LoRa] 📥 RX Frame: code=0x03 (3) len=147
+[16:33:22] [INFO] Contact: Freyja Repeater (type: 2)
+[16:33:22] [INFO] ⛔ Ignoring mobile repeater: Freyja Repeater
+[16:33:22] [LoRa] 📶 Raw RX: 5 bytes - 04 27 cd 6e 69
+[16:33:22] [LoRa] 📥 RX Frame: code=0x04 (4) len=4
+[16:33:22] [INFO] Contact list complete
+[16:33:27] [LoRa] 📶 Raw RX: 47 bytes - 88 32 bf 15 07 8d 82 a4 42 a7 7a 11 ec 56 3a 5f 48 b7 52 b5...
+[16:33:27] [LoRa] 📥 RX Frame: code=0x88 (136) len=46
+[16:33:27] [LoRa] Unhandled frame type: 0x88
+[16:33:27] [LoRa] 📶 Raw RX: 48 bytes - 88 30 c4 15 08 8d 82 a4 42 a7 cf 7e 84 ec 56 3a 5f 48 b7 52...
+[16:33:27] [LoRa] 📥 RX Frame: code=0x88 (136) len=47
+[16:33:27] [LoRa] Unhandled frame type: 0x88
+[16:33:28] [LoRa] 📶 Raw RX: 48 bytes - 88 2c a8 15 08 8d 82 a4 42 a7 7a 11 ba ec 56 3a 5f 48 b7 52...
+[16:33:28] [LoRa] 📥 RX Frame: code=0x88 (136) len=47
+[16:33:28] [LoRa] Unhandled frame type: 0x88
+[16:33:34] [LoRa] 📶 Raw RX: 140 bytes - 88 2f bf 11 03 90 a5 11 75 80 09 a9 57 08 88 4e 3f d2 76 8c...
+[16:33:34] [LoRa] 📥 RX Frame: code=0x88 (136) len=139
+[16:33:34] [LoRa] Unhandled frame type: 0x88
+[16:33:35] [LoRa] 📶 Raw RX: 141 bytes - 88 31 c4 11 04 90 a5 11 84 75 80 09 a9 57 08 88 4e 3f d2 76...
+[16:33:35] [LoRa] 📥 RX Frame: code=0x88 (136) len=140
+[16:33:35] [LoRa] Unhandled frame type: 0x88
+[16:33:35] [LoRa] 📶 Raw RX: 141 bytes - 88 2e 9f 11 04 90 a5 11 8a 75 80 09 a9 57 08 88 4e 3f d2 76...
+[16:33:35] [LoRa] 📥 RX Frame: code=0x88 (136) len=140
+[16:33:35] [LoRa] Unhandled frame type: 0x88
+[16:33:41] [LoRa] 📶 Raw RX: 27 bytes - 88 12 c4 05 02 86 84 c9 43 d5 ae b2 23 93 82 96 cd 3c 18 93...
+[16:33:41] [LoRa] 📥 RX Frame: code=0x88 (136) len=26
+[16:33:41] [LoRa] Unhandled frame type: 0x88
+[16:33:48] [LoRa] 📶 Raw RX: 47 bytes - 88 30 bf 15 07 8d 82 0a 1b 80 9d 11 49 3c 10 d5 85 57 31 bd...
+[16:33:48] [LoRa] 📥 RX Frame: code=0x88 (136) len=46
+[16:33:48] [LoRa] Unhandled frame type: 0x88
+[16:33:48] [LoRa] 📶 Raw RX: 1 bytes - 83
+[16:33:48] [LoRa] 📥 RX Frame: code=0x83 (131) len=0
+[16:33:48] [LoRa] Unhandled frame type: 0x83
+[16:33:49] [LoRa] 📶 Raw RX: 47 bytes - 88 31 c4 15 07 8d 82 0a 1b 80 a5 84 49 3c 10 d5 85 57 31 bd...
+[16:33:49] [LoRa] 📥 RX Frame: code=0x88 (136) len=46
+[16:33:49] [LoRa] Unhandled frame type: 0x88
+[16:33:49] [LoRa] 📶 Raw RX: 48 bytes - 88 1c a7 15 08 8d 82 0a 1b 80 9d 11 ba 49 3c 10 d5 85 57 31...
+[16:33:49] [LoRa] 📥 RX Frame: code=0x88 (136) len=47
+[16:33:49] [LoRa] Unhandled frame type: 0x88
+[16:33:58] [LoRa] 📶 Raw RX: 48 bytes - 88 30 bf 15 08 8d 8b 2c bc 43 7a 9d 11 a7 c7 a6 df 1b 6a 79...
+[16:33:58] [LoRa] 📥 RX Frame: code=0x88 (136) len=47
+[16:33:58] [LoRa] Unhandled frame type: 0x88
+[16:33:59] [LoRa] 📶 Raw RX: 1 bytes - 83
+[16:33:59] [LoRa] 📥 RX Frame: code=0x83 (131) len=0
+[16:33:59] [LoRa] Unhandled frame type: 0x83
+[16:33:59] [LoRa] 📶 Raw RX: 49 bytes - 88 33 c4 15 09 8d 8b 2c bc 43 7a 9d 11 84 a7 c7 a6 df 1b 6a...
+[16:33:59] [LoRa] 📥 RX Frame: code=0x88 (136) len=48
+[16:33:59] [LoRa] Unhandled frame type: 0x88
+[16:33:59] [LoRa] 📶 Raw RX: 49 bytes - 88 2f 9f 15 09 8d 8b 2c bc 43 7a 9d 11 8a a7 c7 a6 df 1b 6a...
+[16:33:59] [LoRa] 📥 RX Frame: code=0x88 (136) len=48
+[16:33:59] [LoRa] Unhandled frame type: 0x88
+[16:34:01] [LoRa] 📶 Raw RX: 82 bytes - 88 31 bf 15 0a 41 89 56 1c 94 a4 cd 7a a5 11 11 a6 d3 e5 4c...
+[16:34:01] [LoRa] 📥 RX Frame: code=0x88 (136) len=81
+[16:34:01] [LoRa] Unhandled frame type: 0x88
+[16:34:01] [LoRa] 📶 Raw RX: 1 bytes - 83
+[16:34:01] [LoRa] 📥 RX Frame: code=0x83 (131) len=0
+[16:34:01] [LoRa] Unhandled frame type: 0x83
+[16:34:01] [LoRa] 📶 Raw RX: 82 bytes - 88 2e 9f 15 0a 41 89 56 1c 94 a4 cd 7a a5 8a 11 a6 d3 e5 4c...
+[16:34:01] [LoRa] 📥 RX Frame: code=0x88 (136) len=81
+[16:34:01] [LoRa] Unhandled frame type: 0x88
+[16:34:02] [LoRa] 📶 Raw RX: 83 bytes - 88 33 c4 15 0b 41 89 56 1c 94 a4 cd 7a a5 11 84 11 a6 d3 e5...
+[16:34:02] [LoRa] 📥 RX Frame: code=0x88 (136) len=82
+[16:34:02] [LoRa] Unhandled frame type: 0x88
+[16:34:06] [LoRa] 📤 TX: 9 bytes - 14 e6 08 d7 02 01 df b0 f8
+[16:34:06] [LoRa] ✅ BLE write complete
+[16:34:06] [INFO] 📍 Updated device position: 47.6469499, -122.6263027
+[16:34:06] [INFO] 📡 Sending zero-hop advertisement
+[16:34:06] [LoRa] 📤 TX: 2 bytes - 07 00
+[16:34:06] [LoRa] 📶 Raw RX: 11 bytes - 0c 8d 0f 00 00 00 00 64 00 00 00
+[16:34:06] [LoRa] 📥 RX Frame: code=0x0c (12) len=10
+[16:34:06] [INFO] Battery: 81% (3981 mV)
+[16:34:06] [LoRa] ✅ BLE write complete
+[16:34:06] [LoRa] 📶 Raw RX: 1 bytes - 00
+[16:34:06] [LoRa] 📥 RX Frame: code=0x00 (0) len=0
+[16:34:06] [INFO] ✅ Command OK
+[16:34:06] [INFO] Discovery payload: 80 04 5a fe be 47 00 00 00 00
+[16:34:06] [INFO] Full command frame: 37 80 04 5a fe be 47 00 00 00 00...
+[16:34:06] [INFO] 📡 Sending DISCOVER_REQ with tag=0x47befe5a
+[16:34:06] [LoRa] 📤 TX: 11 bytes - 37 80 04 5a fe be 47 00 00 00 00
+[16:34:06] [LoRa] ✅ BLE write complete
+[16:34:06] [PING] 📍 Discovery ping sent at (47.6469499, -122.6263027)
+[16:34:06] [INFO] Note: Repeaters rate-limit to 4 responses per 2 minutes
+[16:34:06] [LoRa] 📶 Raw RX: 1 bytes - 00
+[16:34:06] [LoRa] 📥 RX Frame: code=0x00 (0) len=0
+[16:34:06] [INFO] ✅ Command OK
+[16:34:08] [LoRa] 📶 Raw RX: 43 bytes - 88 34 a8 2e 00 92 2e 5a fe be 47 ba d5 dc 49 90 bb 21 7a 74...
+[16:34:08] [LoRa] 📥 RX Frame: code=0x88 (136) len=42
+[16:34:08] [LoRa] Unhandled frame type: 0x88
+[16:34:08] [LoRa] 📶 Raw RX: 42 bytes - 8e 34 a8 00 92 2e 5a fe be 47 ba d5 dc 49 90 bb 21 7a 74 e6...
+[16:34:08] [LoRa] 📥 RX Frame: code=0x8e (142) len=41
+[16:34:08] [LoRa] 🔍 Control data received (0x8E), payload len=41
+[16:34:08] [LoRa] Control data hex: 34 a8 00 92 2e 5a fe be 47 ba d5 dc 49 90 bb 21 7a 74 e6 74 94 e2 e6 d7 66 56 a1 1e 4e 14 6d ca e0 01 59 91 b4 e5 b2 3b fd
+[16:34:08] [INFO] 🔍 DISCOVER_RESP: tag=0x47befe5a, node=BAD5DC49, type=2, SNR=13, RSSI=-88
+[16:34:08] [INFO] 📞 Requesting position for BAD5DC49
+[16:34:08] [PING] 📡 Repeater BAD5DC49 responded (SNR=13, RSSI=-88)
+[16:34:09] [LoRa] 📶 Raw RX: 43 bytes - 88 2f 9f 2e 00 92 2d 5a fe be 47 8a e6 74 a4 5a 62 8b 69 fd...
+[16:34:09] [LoRa] 📥 RX Frame: code=0x88 (136) len=42
+[16:34:09] [LoRa] Unhandled frame type: 0x88
+[16:34:09] [LoRa] 📶 Raw RX: 42 bytes - 8e 2f 9f 00 92 2d 5a fe be 47 8a e6 74 a4 5a 62 8b 69 fd c8...
+[16:34:09] [LoRa] 📥 RX Frame: code=0x8e (142) len=41
+[16:34:09] [LoRa] 🔍 Control data received (0x8E), payload len=41
+[16:34:09] [LoRa] Control data hex: 2f 9f 00 92 2d 5a fe be 47 8a e6 74 a4 5a 62 8b 69 fd c8 27 5c fc 55 cb 9d 89 86 68 66 ac 06 34 c0 53 b3 90 c6 53 50 49 03
+[16:34:09] [INFO] 🔍 DISCOVER_RESP: tag=0x47befe5a, node=8AE674A4, type=2, SNR=12, RSSI=-97
+[16:34:09] [INFO] 📞 Requesting position for 8AE674A4
+[16:34:09] [PING] 📡 Repeater 8AE674A4 responded (SNR=12, RSSI=-97)
+[16:34:09] [LoRa] 📶 Raw RX: 43 bytes - 88 31 bf 2e 00 92 30 5a fe be 47 11 a9 58 db 7f 92 36 cb e2...
+[16:34:09] [LoRa] 📥 RX Frame: code=0x88 (136) len=42
+[16:34:09] [LoRa] Unhandled frame type: 0x88
+[16:34:09] [LoRa] 📶 Raw RX: 42 bytes - 8e 31 bf 00 92 30 5a fe be 47 11 a9 58 db 7f 92 36 cb e2 3d...
+[16:34:09] [LoRa] 📥 RX Frame: code=0x8e (142) len=41
+[16:34:09] [LoRa] 🔍 Control data received (0x8E), payload len=41
+[16:34:09] [LoRa] Control data hex: 31 bf 00 92 30 5a fe be 47 11 a9 58 db 7f 92 36 cb e2 3d 09 b3 4d cd cc 64 4e 9c f7 e1 e0 9c 24 42 87 18 f7 e6 76 46 52 b6
+[16:34:09] [INFO] 🔍 DISCOVER_RESP: tag=0x47befe5a, node=11A958DB, type=2, SNR=12, RSSI=-65
+[16:34:09] [INFO] 📞 Requesting position for 11A958DB
+[16:34:09] [PING] 📡 Repeater 11A958DB responded (SNR=12, RSSI=-65)
+[16:34:10] [LoRa] 📶 Raw RX: 43 bytes - 88 2f c4 2e 00 92 30 5a fe be 47 84 da a8 ee 8d 39 9f a1 a8...
+[16:34:10] [LoRa] 📥 RX Frame: code=0x88 (136) len=42
+[16:34:10] [LoRa] Unhandled frame type: 0x88
+[16:34:10] [LoRa] 📶 Raw RX: 42 bytes - 8e 2f c4 00 92 30 5a fe be 47 84 da a8 ee 8d 39 9f a1 a8 66...
+[16:34:10] [LoRa] 📥 RX Frame: code=0x8e (142) len=41
+[16:34:10] [LoRa] 🔍 Control data received (0x8E), payload len=41
+[16:34:10] [LoRa] Control data hex: 2f c4 00 92 30 5a fe be 47 84 da a8 ee 8d 39 9f a1 a8 66 58 fd 3a 12 4c c3 b3 0c 6e 7f 85 18 24 d0 cf 7b 6e e0 80 a9 dd a6
+[16:34:10] [INFO] 🔍 DISCOVER_RESP: tag=0x47befe5a, node=84DAA8EE, type=2, SNR=12, RSSI=-60
+[16:34:10] [INFO] 📞 Requesting position for 84DAA8EE
+[16:34:10] [PING] 📡 Repeater 84DAA8EE responded (SNR=12, RSSI=-60)
+[16:34:16] [PING] ✅ Best response: BAD5DC4990BB217A74E67494E2E6D76656A11E4E146DCAE0015991B4E5B23BFD (SNR=13, RSSI=-88)
+[16:34:22] [LoRa] 📶 Raw RX: 125 bytes - 88 30 bf 11 04 b6 42 86 11 43 f6 8d 79 fb a3 5c 2e 78 3c 29...
+[16:34:22] [LoRa] 📥 RX Frame: code=0x88 (136) len=124
+[16:34:22] [LoRa] Unhandled frame type: 0x88
+[16:34:22] [LoRa] 📶 Raw RX: 126 bytes - 88 31 a8 11 05 b6 42 86 11 ba 43 f6 8d 79 fb a3 5c 2e 78 3c...
+[16:34:22] [LoRa] 📥 RX Frame: code=0x88 (136) len=125
+[16:34:22] [LoRa] Unhandled frame type: 0x88
+[16:34:23] [LoRa] 📶 Raw RX: 126 bytes - 88 30 c4 11 05 b6 42 86 11 84 43 f6 8d 79 fb a3 5c 2e 78 3c...
+[16:34:23] [LoRa] 📥 RX Frame: code=0x88 (136) len=125
+[16:34:23] [LoRa] Unhandled frame type: 0x88
+[16:34:23] [LoRa] 📶 Raw RX: 126 bytes - 88 2d 9f 11 05 b6 42 86 11 8a 43 f6 8d 79 fb a3 5c 2e 78 3c...
+[16:34:23] [LoRa] 📥 RX Frame: code=0x88 (136) len=125
+[16:34:23] [LoRa] Unhandled frame type: 0x88
