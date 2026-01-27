@@ -2,50 +2,13 @@
 
 A mobile wardriving application for mapping MeshCore mesh network coverage in real-time.
 
-## 📥 Download
-
-**Latest Release:** [v1.0.17 APK](releases/meshcore-wardrive-v1.0.17.apk) (53.5 MB)
-
-**Previous Versions:**
-- [v1.0.16 APK](releases/meshcore-wardrive-v1.0.16.apk) (53.5 MB)
-- [v1.0.15 APK](releases/meshcore-wardrive-v1.0.15.apk) (53.5 MB)
-- [v1.0.14 APK](releases/meshcore_wardrive_v1.0.14.apk) (53.5 MB)
-- [v1.0.13 APK](releases/meshcore_wardrive_v1.0.13.apk) (51 MB)
-- [v1.0.12 APK](releases/meshcore_wardrive_v1.0.12.apk) (51 MB)
-- [v1.0.11 APK](releases/meshcore_wardrive_v1.0.11.apk) (53.4 MB)
-- [v1.0.10 APK](releases/meshcore_wardrive_v1.0.10.apk) (53.4 MB)
-- [v1.0.9 APK](releases/meshcore_wardrive_v1.0.9.apk) (53.4 MB)
-- [v1.0.8 APK](releases/meshcore_wardrive_v1.0.8.apk) (53.3 MB)
-- [v1.0.7 APK](releases/meshcore_wardrive_v1.0.7.apk) (52.7 MB)
-- [v1.0.6 APK](releases/meshcore_wardrive_v1.0.6.apk) (52.7 MB)
-- [v1.0.5 APK](releases/meshcore_wardrive_v1.0.5.apk) (52.7 MB)
-- [v1.0.4 APK](releases/meshcore_wardrive_v1.0.4.apk) (52.7 MB)
-- [v1.0.3 APK](releases/meshcore_wardrive_v1.0.3.apk) (52.7 MB)
-- [v1.0.2 APK](releases/meshcore_wardrive_v1.0.2.apk) (52.6 MB)
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="images/screenshots/screenshot-1.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-2.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-3.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-4.jpeg" width="200" />
-</p>
-<p align="center">
-  <img src="images/screenshots/screenshot-5.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-6.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-7.jpeg" width="200" />
-  <img src="images/screenshots/screenshot-8.jpeg" width="200" />
-</p>
-
 ## 🚀 Quick Start
 
 1. **Download the APK** from the releases folder
 2. **Enable "Install from Unknown Sources"** in your Android settings
 3. **Install the APK** on your device
-4. **Join #meshwar channel** in the MeshCore app (get QR code from another user)
-5. **Connect your LoRa device** via USB or Bluetooth
-6. **Start wardriving!**
+4. **Connect your LoRa device** via USB or Bluetooth
+5. **Start wardriving!**
 
 ## ✨ Features
 
@@ -81,7 +44,6 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 ## 🎯 How It Works
 
 1. The app connects to your MeshCore companion radio
-2. As you move, it sends ping messages on the #meshwar channel
 3. Repeaters that hear your ping respond with an echo
 4. The app records which repeaters responded and their signal quality
 5. Coverage is visualized as colored grid squares (~1.2km x 610m)
@@ -118,12 +80,11 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 
 ## 📖 Usage Tips
 
-1. **Before First Use**: Join #meshwar in MeshCore app
-2. **Connect Device**: Use USB for most reliable connection
-3. **Enable Tracking**: Press green play button to start GPS tracking
-4. **Enable Auto-Ping**: Toggle the switch to auto-ping while driving
-5. **Manual Testing**: Use manual ping button to test specific locations
-6. **Upload Data**: Share your findings via Settings → Upload Data
+1. **Connect Device**: Use USB for most reliable connection
+2. **Enable Tracking**: Press green play button to start GPS tracking
+3. **Enable Auto-Ping**: Toggle the switch to auto-ping while driving
+4. **Manual Testing**: Use manual ping button to test specific locations
+5. **Upload Data**: Share your findings via Settings → Upload Data
 
 ## 🐛 Troubleshooting
 
@@ -145,12 +106,7 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
   - Add to "Never sleeping apps" in Device Care
   - Disable "Put app to sleep" for this app
   - Use "Allow all the time" location permission (not just "While using")
-
-**"#meshwar Not Found" error?**
-- You must join #meshwar channel in MeshCore app first
-- Get the QR code from another user
-- Reconnect after joining the channel
-
+  
 **No repeater responses?**
 - Verify you're in an area with repeater coverage
 - Check LoRa device is connected (icon in app)
@@ -180,6 +136,23 @@ Help build the community coverage map:
 The more users contribute, the more accurate the coverage map becomes!
 
 ## 📜 Version History
+
+### v1.0.19 (2026-01-20)
+**Data Upload Improvements:**
+- 🧠 Client-side dedupe for your default map: app only uploads new samples once per device for your endpoint
+- 🌐 Other endpoints (self-hosted maps) remain unrestricted; users can upload as often as they want
+- 🪪 Each sample now includes a stable ID in uploads
+
+**Server (map) changes:**
+- 🔁 Server-side dedupe with 90‑day TTL per-sample ID to prevent re-uploads after reinstall
+- 🧹 Continues to overwrite revisited coverage squares; old cells decay until replaced
+
+### v1.0.18 (2026-01-19)
+**Critical Fix:**
+- 🐛 **FIXED: Discovery protocol now working** - Changed type_filter from raw enum value (0x02) to bitmask (0x04)
+- 📡 Repeaters now respond to Discovery requests as intended
+- 🔍 Fixed protocol implementation to match MeshCore firmware expectations
+- ✨ Shortened repeater public key display in logs from 64 to 8 characters for readability
 
 ### v1.0.17 (2026-01-18)
 **New Features:**
