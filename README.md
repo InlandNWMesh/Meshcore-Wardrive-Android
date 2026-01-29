@@ -101,16 +101,7 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 **Can't connect to device?**
 - Check USB cable supports data transfer (not just charging)
 - For Bluetooth: Make sure device is paired in Android settings first
-- Try disconnecting and reconnecting
-
-**Samsung Galaxy Fold GPS/Auto-Ping Issues?**
-- Go to Settings → Debug → Debug Diagnostics
-- Start tracking, reproduce the issue, then share the debug log
-- Check Samsung battery optimization settings:
-  - Set app to "Unrestricted" battery usage
-  - Add to "Never sleeping apps" in Device Care
-  - Disable "Put app to sleep" for this app
-  - Use "Allow all the time" location permission (not just "While using")
+- Try disconnecting and reconnecting 
   
 **No repeater responses?**
 - Verify you're in an area with repeater coverage
