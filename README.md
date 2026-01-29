@@ -45,7 +45,6 @@ View the live community coverage map at: **https://meshwar-map.pages.dev**
 
 - Android device with GPS
 - MeshCore companion radio device
-- Access to #meshwar channel (shared via QR code)
 
 ## 🎯 How It Works
 
