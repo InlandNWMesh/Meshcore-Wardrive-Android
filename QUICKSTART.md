@@ -7,7 +7,7 @@ The app has been successfully built! You can install it on your Android device.
 ### Install on Connected Device
 
 ```bash
-cd /home/chuck/Desktop/meshcore_wardrive
+cd meshcore-wardrive-android
 flutter install
 ```
 
@@ -15,7 +15,7 @@ flutter install
 
 The APK is located at:
 ```
-/home/chuck/Desktop/meshcore_wardrive/build/app/outputs/flutter-apk/app-debug.apk
+build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 Transfer this file to your Android device and install it.
@@ -114,4 +114,4 @@ To make changes:
 
 ## Credits
 
-Based on mesh-map.pages.dev by Kyle Reed for MeshCore network coverage mapping.
+Originally inspired by mesh-map.pages.dev by Kyle Reed for MeshCore network coverage mapping.

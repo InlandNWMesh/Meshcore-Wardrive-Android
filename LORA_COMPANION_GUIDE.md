@@ -1,6 +1,6 @@
 ## MeshCore Wardrive - LoRa Companion Guide
 
-This app now works **exactly like the mesh-map.pages.dev website** - using your LoRa companion device to send actual radio pings and MQTT to listen for observer responses.
+This app works with your LoRa companion device to send actual radio pings and MQTT to listen for observer responses, uploading coverage data to wardrive.inwmesh.org.
 
 ## How It Works
 
@@ -277,4 +277,4 @@ Access `locationService.loraCompanion.ping()` directly for single pings.
 
 ## Credits
 
-This implementation replicates the exact workflow from mesh-map.pages.dev for MeshCore coverage mapping with LoRa companions.
+Originally inspired by the mesh-map.pages.dev workflow for MeshCore coverage mapping with LoRa companions.

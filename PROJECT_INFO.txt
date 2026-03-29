@@ -65,9 +65,9 @@ KEY COMPONENTS
             geohash, rssi, snr, pingSuccess
 
 5. UPLOAD SERVICE (upload_service.dart)
-   - Uploads samples to Cloudflare Pages API
+   - Uploads samples to self-hosted wardrive map API
    - Includes repeater friendly names
-   - Default URL: https://meshwar-map.pages.dev/api/samples
+   - Default URL: https://wardrive.inwmesh.org/api/samples
 
 CURRENT STATE (v1.0.17)
 -----------------------
@@ -130,10 +130,10 @@ Persisted via SharedPreferences in settings_service.dart
 
 WEB MAP INTEGRATION
 -------------------
-Backend: Cloudflare Pages Function (meshcore-map-site)
-Storage: Cloudflare KV (geohash-based aggregated coverage)
+Backend: Self-hosted Node.js/Express on apollo (Docker)
+Storage: PostgreSQL + Redis (geohash-based aggregated coverage)
 Format: JSON with repeaterName field for friendly names
-Live map: https://meshwar-map.pages.dev
+Live map: https://wardrive.inwmesh.org
 
 Data uploaded includes:
 - nodeId (repeater ID)
@@ -167,7 +167,7 @@ GIT REPOSITORIES
 Main project: meshcore_wardrive/ (production stable)
 Dev branch:   meshcore_wardrive_dev/ (this directory)
 Releases:     meshcore_wardrive_releases/ (APK releases + docs)
-Web map:      meshcore-map-site/ (Cloudflare Pages backend)
+Web map:      meshwar-map/ (self-hosted Docker backend)
 
 KNOWN ISSUES
 ------------
@@ -194,8 +194,8 @@ TESTING CHECKLIST
 
 CONTACT
 -------
-GitHub: https://github.com/mintylinux/Meshcore-Wardrive-Android
-Web map: https://meshwar-map.pages.dev
+GitHub: https://github.com/george-viaud/Meshcore-Wardrive-Android
+Web map: https://wardrive.inwmesh.org
 
 NOTES
 -----

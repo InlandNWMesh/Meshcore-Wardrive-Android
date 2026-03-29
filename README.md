@@ -30,7 +30,7 @@ A Flutter-based Android application for mapping MeshCore mesh network coverage i
 - **Web Map Upload** - Contribute to community coverage map
 
 ### Web Map
-View the live community coverage map at: **https://meshwar-map.pages.dev**
+View the live community coverage map at: **https://wardrive.inwmesh.org**
 
 - Interactive coverage visualization
 - Success rate analytics per grid square

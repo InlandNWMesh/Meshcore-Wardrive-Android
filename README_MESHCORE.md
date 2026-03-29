@@ -1,6 +1,6 @@
 # MeshCore Wardrive
 
-An Android app for wardriving and mapping MeshCore mesh network coverage. This app replicates the functionality of mesh-map.pages.dev with reliable GPS location tracking on Android devices.
+An Android app for wardriving and mapping MeshCore mesh network coverage. Pairs with the self-hosted wardrive map at wardrive.inwmesh.org for reliable GPS location tracking and community coverage mapping.
 
 ## Features
 
@@ -132,8 +132,8 @@ lib/
 
 ## Credits
 
-Based on the mesh-map.pages.dev web application by Kyle Reed for MeshCore coverage mapping.
+Originally inspired by the mesh-map.pages.dev web application by Kyle Reed for MeshCore coverage mapping.
 
 ## License
 
-MIT License
+GNU General Public License v3.0
