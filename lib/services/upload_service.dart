@@ -19,7 +19,7 @@ class UploadService {
   static const String _lastUploadKey = 'last_upload_timestamp';
   
   // Default URL (user can change this)
-  static const String defaultApiUrl = 'https://meshwar-map.pages.dev/api/samples';
+  static const String defaultApiUrl = 'https://wardrive.inwmesh.org/api/samples';
   
   final DatabaseService _db = DatabaseService();
   

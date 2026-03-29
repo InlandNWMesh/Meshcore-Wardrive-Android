@@ -2108,7 +2108,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter the URL of your Cloudflare Pages API endpoint:',
+              'Enter the URL of your wardrive map API endpoint:',
               style: TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -2116,7 +2116,7 @@ class _MapScreenState extends State<MapScreen> {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'API URL',
-                hintText: 'https://your-site.pages.dev/api/samples',
+                hintText: 'https://wardrive.inwmesh.org/api/samples',
                 isDense: true,
               ),
               keyboardType: TextInputType.url,
