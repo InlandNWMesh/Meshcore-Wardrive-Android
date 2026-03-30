@@ -45,6 +45,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isTracking = false;
   int _sampleCount = 0;
   List<Sample> _samples = [];
+  List<Sample> _filteredSamples = [];
   AggregationResult? _aggregationResult;
   
   String _colorMode = 'quality';
@@ -176,6 +177,22 @@ class _MapScreenState extends State<MapScreen> {
     // Apply to services
     _locationService.setPingInterval(pingInterval);
     _locationService.loraCompanion.setIgnoredRepeaterPrefix(ignoredPrefix);
+    _recomputeFilteredSamples();
+  }
+
+  void _recomputeFilteredSamples() {
+    _filteredSamples = _samples.where((sample) {
+      if (!_showGpsSamples && sample.pingSuccess == null) return false;
+      if (_showSuccessfulOnly && sample.pingSuccess != true) return false;
+      if (_includeOnlyRepeaters != null && _includeOnlyRepeaters!.isNotEmpty) {
+        final allowedPrefixes = _includeOnlyRepeaters!
+            .split(',').map((s) => s.trim().toUpperCase()).toList();
+        final sampleNodeId = sample.path?.toUpperCase() ?? '';
+        if (!allowedPrefixes.any((prefix) => sampleNodeId.startsWith(prefix))) return false;
+      }
+      return true;
+    }).toList()
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
   }
 
   Future<void> _getCurrentLocation() async {
@@ -215,6 +232,7 @@ class _MapScreenState extends State<MapScreen> {
       _autoPingEnabled = _locationService.isAutoPingEnabled;
       _repeaters = discoveredRepeaters;
     });
+    _recomputeFilteredSamples();
   }
 
   Future<void> _toggleTracking() async {
@@ -624,39 +642,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildSampleLayer() {
-    if (_samples.isEmpty) return const SizedBox.shrink();
-    
-    // Filter samples based on settings
-    final filteredSamples = _samples.where((sample) {
-      // If showing GPS samples is disabled, hide samples with null pingSuccess
-      if (!_showGpsSamples && sample.pingSuccess == null) {
-        return false;
-      }
-      
-      // If showing successful only, hide failed pings and GPS-only samples
-      if (_showSuccessfulOnly && sample.pingSuccess != true) {
-        return false;
-      }
-      
-      // If include-only repeaters is set, only show samples from those repeaters
-      if (_includeOnlyRepeaters != null && _includeOnlyRepeaters!.isNotEmpty) {
-        final allowedPrefixes = _includeOnlyRepeaters!.split(',').map((s) => s.trim().toUpperCase()).toList();
-        final sampleNodeId = sample.path?.toUpperCase() ?? '';
-        
-        // Check if sample's repeater matches any allowed prefix
-        final matches = allowedPrefixes.any((prefix) => sampleNodeId.startsWith(prefix));
-        if (!matches) {
-          return false;
-        }
-      }
-      
-      return true;
-    }).toList();
-    
-    // Sort by timestamp (oldest first) so newer samples render on top
-    filteredSamples.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    
-    final markers = filteredSamples.map((sample) {
+    if (_filteredSamples.isEmpty) return const SizedBox.shrink();
+
+    final markers = _filteredSamples.map((sample) {
       // Determine color based on ping result
       Color markerColor;
       if (sample.pingSuccess == true) {
@@ -1326,6 +1314,7 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _includeOnlyRepeaters = prefixes;
       });
+      _recomputeFilteredSamples();
       await _settingsService.setIncludeOnlyRepeaters(prefixes);
       _showSnackBar('Repeater whitelist updated');
     }
@@ -1420,6 +1409,7 @@ class _MapScreenState extends State<MapScreen> {
                 setState(() {
                   _showGpsSamples = value;
                 });
+                _recomputeFilteredSamples();
                 await _settingsService.setShowGpsSamples(value);
                 Navigator.pop(context);
               },
@@ -1432,6 +1422,7 @@ class _MapScreenState extends State<MapScreen> {
                 setState(() {
                   _showSuccessfulOnly = value;
                 });
+                _recomputeFilteredSamples();
                 Navigator.pop(context);
                 _showSnackBar(value ? 'Showing successful only' : 'Showing all samples');
               },
@@ -2112,6 +2103,7 @@ class _MapScreenState extends State<MapScreen> {
     bool? tokenValid;
     bool tokenValidating = false;
     String? tokenError;
+    int validationGeneration = 0;
 
     await showDialog<void>(
       context: context,
@@ -2119,9 +2111,11 @@ class _MapScreenState extends State<MapScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           Future<void> runValidation() async {
+            final gen = ++validationGeneration;
             setState(() { tokenValidating = true; tokenValid = null; tokenError = null; });
             final error = await _uploadService.validateToken(
               urlController.text, tokenController.text);
+            if (gen != validationGeneration) return; // stale — a newer call is in flight
             setState(() {
               tokenValidating = false;
               tokenValid = error == null;
