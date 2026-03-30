@@ -28,6 +28,7 @@ import '../main.dart';
 import '../constants/app_version.dart';
 import '../constants/map_constants.dart';
 import '../models/map_display_settings.dart';
+import '../state/map_state_notifier.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -38,47 +39,24 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   // App version is imported from constants/app_version.dart
-  
+
   final LocationService _locationService = LocationService();
   final MapController _mapController = MapController();
   final UploadService _uploadService = UploadService();
   final SettingsService _settingsService = SettingsService();
-  
-  bool _isTracking = false;
-  int _sampleCount = 0;
-  List<Sample> _samples = [];
-  List<Sample> _filteredSamples = [];
-  AggregationResult? _aggregationResult;
-  
-  MapDisplaySettings _displaySettings = const MapDisplaySettings();
-  
-  // Repeaters
-  List<Repeater> _repeaters = [];
-  
-  LatLng? _currentPosition;
+
+  late MapStateNotifier _notifier;
+
   Timer? _updateTimer;
   StreamSubscription<LatLng>? _positionSubscription;
   StreamSubscription<void>? _sampleSavedSubscription;
   StreamSubscription<String>? _pingEventSubscription;
-  
-  // Ping visual indicator
-  bool _showPingPulse = false;
-  
-  // LoRa connection status
-  bool _loraConnected = false;
-  ConnectionType _connectionType = ConnectionType.none;
-  int? _batteryPercent;
   StreamSubscription<int?>? _batterySubscription;
-  
-  // Auto-follow GPS location
-  bool _followLocation = false;
-  
-  // Map rotation lock
-  bool _lockRotationNorth = false;
 
   @override
   void initState() {
     super.initState();
+    _notifier = MapStateNotifier();
     _initialize();
   }
 
@@ -89,41 +67,30 @@ class _MapScreenState extends State<MapScreen> {
     // Subscribe to battery updates
     final loraService = _locationService.loraCompanion;
     _batterySubscription = loraService.batteryStream.listen((percent) {
-      setState(() {
-        _batteryPercent = percent;
-      });
+      _notifier.setBattery(percent);
     });
-    
+
     // Subscribe to position updates
     _positionSubscription = _locationService.currentPositionStream.listen((position) {
-      setState(() {
-        _currentPosition = position;
-      });
-      
+      _notifier.setPosition(position);
       // Auto-follow if enabled
-      if (_followLocation && position != null) {
+      if (_notifier.state.followLocation) {
         _mapController.move(position, _mapController.camera.zoom);
       }
     });
-    
+
     // Subscribe to sample saved events - reload map when new samples are saved
     _sampleSavedSubscription = _locationService.sampleSavedStream.listen((_) {
       _loadSamples();
     });
-    
+
     // Subscribe to ping events for visual feedback
     _pingEventSubscription = _locationService.pingEventStream.listen((event) {
       if (event == 'pinging' && mounted) {
-        setState(() {
-          _showPingPulse = true;
-        });
+        _notifier.setPingPulse(true);
         // Hide pulse after kPingPulseDurationSeconds
         Future.delayed(Duration(seconds: kPingPulseDurationSeconds), () {
-          if (mounted) {
-            setState(() {
-              _showPingPulse = false;
-            });
-          }
+          if (mounted) _notifier.setPingPulse(false);
         });
       }
     });
@@ -152,48 +119,28 @@ class _MapScreenState extends State<MapScreen> {
     final ignoredPrefix = await _settingsService.getIgnoredRepeaterPrefix();
     final includeOnly = await _settingsService.getIncludeOnlyRepeaters();
     
-    setState(() {
-      _displaySettings = MapDisplaySettings(
-        showSamples: showSamples,
-        showGpsSamples: showGpsSamples,
-        showCoverage: showCoverage,
-        showEdges: showEdges,
-        showRepeaters: showRepeaters,
-        colorMode: colorMode,
-        pingIntervalMeters: pingInterval,
-        coveragePrecision: coveragePrecision,
-        ignoredRepeaterPrefix: ignoredPrefix,
-        includeOnlyRepeaters: includeOnly,
-      );
-    });
-    
+    _notifier.updateDisplaySettings(MapDisplaySettings(
+      showSamples: showSamples,
+      showGpsSamples: showGpsSamples,
+      showCoverage: showCoverage,
+      showEdges: showEdges,
+      showRepeaters: showRepeaters,
+      colorMode: colorMode,
+      pingIntervalMeters: pingInterval,
+      coveragePrecision: coveragePrecision,
+      ignoredRepeaterPrefix: ignoredPrefix,
+      includeOnlyRepeaters: includeOnly,
+    ));
+
     // Apply to services
     _locationService.setPingInterval(pingInterval);
     _locationService.loraCompanion.setIgnoredRepeaterPrefix(ignoredPrefix);
-    _recomputeFilteredSamples();
-  }
-
-  void _recomputeFilteredSamples() {
-    _filteredSamples = _samples.where((sample) {
-      if (!_displaySettings.showGpsSamples && sample.pingSuccess == null) return false;
-      if (_displaySettings.showSuccessfulOnly && sample.pingSuccess != true) return false;
-      if (_displaySettings.includeOnlyRepeaters != null && _displaySettings.includeOnlyRepeaters!.isNotEmpty) {
-        final allowedPrefixes = _displaySettings.includeOnlyRepeaters!
-            .split(',').map((s) => s.trim().toUpperCase()).toList();
-        final sampleNodeId = sample.path?.toUpperCase() ?? '';
-        if (!allowedPrefixes.any((prefix) => sampleNodeId.startsWith(prefix))) return false;
-      }
-      return true;
-    }).toList()
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
   }
 
   Future<void> _getCurrentLocation() async {
     final pos = await _locationService.getCurrentPosition();
     if (pos != null) {
-      setState(() {
-        _currentPosition = pos;
-      });
+      _notifier.setPosition(pos);
       // Move map to user's current location on startup
       _mapController.move(pos, kDefaultMapZoom);
     }
@@ -213,46 +160,37 @@ class _MapScreenState extends State<MapScreen> {
     final result = AggregationService.buildIndexes(
       samples,
       discoveredRepeaters,
-      coveragePrecision: _displaySettings.coveragePrecision,
+      coveragePrecision: _notifier.state.displaySettings.coveragePrecision,
     );
 
-    setState(() {
-      _samples = samples;
-      _sampleCount = count;
-      _aggregationResult = result;
-      _loraConnected = loraService.isDeviceConnected;
-      _connectionType = loraService.connectionType;
-      _displaySettings = _displaySettings.copyWith(autoPingEnabled: _locationService.isAutoPingEnabled);
-      _repeaters = discoveredRepeaters;
-    });
-    _recomputeFilteredSamples();
+    _notifier.updateFromSampleLoad(
+      samples: samples,
+      sampleCount: count,
+      aggregationResult: result,
+      loraConnected: loraService.isDeviceConnected,
+      connectionType: loraService.connectionType,
+      autoPingEnabled: _locationService.isAutoPingEnabled,
+      repeaters: discoveredRepeaters,
+    );
   }
 
   Future<void> _toggleTracking() async {
-    if (_isTracking) {
+    if (_notifier.state.isTracking) {
       // Stop tracking and auto-ping
       await _locationService.stopTracking();
       _locationService.disableAutoPing();
-      setState(() {
-        _isTracking = false;
-        _displaySettings = _displaySettings.copyWith(autoPingEnabled: false);
-      });
+      _notifier.setTracking(isTracking: false, autoPingEnabled: false);
     } else {
       // Start tracking
       final started = await _locationService.startTracking();
       if (started) {
         // Auto-enable ping if LoRa is connected
-        if (_loraConnected) {
+        if (_notifier.state.loraConnected) {
           _locationService.enableAutoPing();
-          setState(() {
-            _isTracking = true;
-            _displaySettings = _displaySettings.copyWith(autoPingEnabled: true);
-          });
+          _notifier.setTracking(isTracking: true, autoPingEnabled: true);
           _showSnackBar('Location tracking and auto-ping started');
         } else {
-          setState(() {
-            _isTracking = true;
-          });
+          _notifier.setTracking(isTracking: true, autoPingEnabled: false);
           _showSnackBar('Location tracking started');
         }
       } else {
@@ -447,14 +385,14 @@ class _MapScreenState extends State<MapScreen> {
   
 
   void _toggleFollowLocation() {
-    setState(() {
-      _followLocation = !_followLocation;
-    });
-    
-    if (_followLocation) {
+    final newFollow = !_notifier.state.followLocation;
+    _notifier.setFollowLocation(newFollow);
+
+    if (newFollow) {
       // Center on current location when enabling follow
-      if (_currentPosition != null) {
-        _mapController.move(_currentPosition!, _mapController.camera.zoom);
+      final pos = _notifier.state.currentPosition;
+      if (pos != null) {
+        _mapController.move(pos, _mapController.camera.zoom);
       }
       _showSnackBar('Auto-follow enabled');
     } else {
@@ -475,13 +413,16 @@ class _MapScreenState extends State<MapScreen> {
     _sampleSavedSubscription?.cancel();
     _pingEventSubscription?.cancel();
     _locationService.dispose();
+    _notifier.dispose();
     super.dispose();
   }
 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ListenableBuilder(
+      listenable: _notifier,
+      builder: (context, _) => Scaffold(
       appBar: AppBar(
         title: const Text('MeshCore Wardrive'),
         actions: [
@@ -522,22 +463,23 @@ class _MapScreenState extends State<MapScreen> {
             heroTag: 'location',
             mini: true,
             onPressed: _toggleFollowLocation,
-            backgroundColor: _followLocation ? Colors.blue : null,
+            backgroundColor: _notifier.state.followLocation ? Colors.blue : null,
             child: Icon(
-              _followLocation ? Icons.gps_fixed : Icons.gps_not_fixed,
+              _notifier.state.followLocation ? Icons.gps_fixed : Icons.gps_not_fixed,
             ),
           ),
           const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'tracking',
             onPressed: _toggleTracking,
-            backgroundColor: _isTracking ? Colors.red : Colors.green,
-            child: Icon(_isTracking ? Icons.stop : Icons.play_arrow),
+            backgroundColor: _notifier.state.isTracking ? Colors.red : Colors.green,
+            child: Icon(_notifier.state.isTracking ? Icons.stop : Icons.play_arrow),
           ),
         ],
       ),
-    );
-  }
+    ),  // end Scaffold (body of ListenableBuilder.builder)
+  );   // end ListenableBuilder
+  }   // end build
 
   Widget _buildMap() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -545,12 +487,12 @@ class _MapScreenState extends State<MapScreen> {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        initialCenter: _currentPosition ?? GeohashUtils.centerPos,
+        initialCenter: _notifier.state.currentPosition ?? GeohashUtils.centerPos,
         initialZoom: kDefaultMapZoom,
         minZoom: 3.0,
         maxZoom: 18.0,
         interactionOptions: InteractionOptions(
-          flags: _lockRotationNorth 
+          flags: _notifier.state.lockRotationNorth 
               ? InteractiveFlag.all & ~InteractiveFlag.rotate  // Disable rotation
               : InteractiveFlag.all,  // Allow all interactions
         ),
@@ -560,10 +502,8 @@ class _MapScreenState extends State<MapScreen> {
             // Ignore programmatic moves (from auto-follow)
             return;
           }
-          if (event is MapEventMoveStart && _followLocation) {
-            setState(() {
-              _followLocation = false;
-            });
+          if (event is MapEventMoveStart && _notifier.state.followLocation) {
+            _notifier.setFollowLocation(false);
           }
         },
       ),
@@ -575,24 +515,24 @@ class _MapScreenState extends State<MapScreen> {
           subdomains: isDarkMode ? const ['a', 'b', 'c', 'd'] : const [],
           userAgentPackageName: 'com.meshcore.wardrive',
         ),
-        if (_displaySettings.showCoverage) ..._buildCoverageLayers(),
-        if (_displaySettings.showSamples) _buildSampleLayer(),
-        if (_displaySettings.showEdges) _buildEdgeLayer(),
-        if (_displaySettings.showRepeaters) _buildRepeaterLayer(),
-        if (_currentPosition != null) _buildCurrentLocationLayer(),
+        if (_notifier.state.displaySettings.showCoverage) ..._buildCoverageLayers(),
+        if (_notifier.state.displaySettings.showSamples) _buildSampleLayer(),
+        if (_notifier.state.displaySettings.showEdges) _buildEdgeLayer(),
+        if (_notifier.state.displaySettings.showRepeaters) _buildRepeaterLayer(),
+        if (_notifier.state.currentPosition != null) _buildCurrentLocationLayer(),
       ],
     );
   }
 
   List<Widget> _buildCoverageLayers() {
-    if (_aggregationResult == null) return [];
+    if (_notifier.state.aggregationResult == null) return [];
     
     final coveragePolygons = <Polygon>[];
     final coverageMarkers = <Marker>[];
     
-    for (final coverage in _aggregationResult!.coverages) {
+    for (final coverage in _notifier.state.aggregationResult!.coverages) {
       final gh = geohash.GeoHash.decode(coverage.id);
-      final color = Color(AggregationService.getCoverageColor(coverage, _displaySettings.colorMode));
+      final color = Color(AggregationService.getCoverageColor(coverage, _notifier.state.displaySettings.colorMode));
       final opacity = AggregationService.getCoverageOpacity(coverage);
       
       // Get corners from geohash bounds
@@ -635,9 +575,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildSampleLayer() {
-    if (_filteredSamples.isEmpty) return const SizedBox.shrink();
+    if (_notifier.state.filteredSamples.isEmpty) return const SizedBox.shrink();
 
-    final markers = _filteredSamples.map((sample) {
+    final markers = _notifier.state.filteredSamples.map((sample) {
       // Determine color based on ping result
       Color markerColor;
       if (sample.pingSuccess == true) {
@@ -674,9 +614,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildEdgeLayer() {
-    if (_aggregationResult == null) return const SizedBox.shrink();
+    if (_notifier.state.aggregationResult == null) return const SizedBox.shrink();
     
-    final polylines = _aggregationResult!.edges.map((edge) {
+    final polylines = _notifier.state.aggregationResult!.edges.map((edge) {
       return Polyline(
         points: [edge.coverage.position, edge.repeater.position],
         color: Colors.purple.withValues(alpha: 0.6),  // Increased from 0.3 to 0.6
@@ -688,9 +628,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildRepeaterLayer() {
-    if (_repeaters.isEmpty) return const SizedBox.shrink();
+    if (_notifier.state.repeaters.isEmpty) return const SizedBox.shrink();
     
-    final markers = _repeaters.map((repeater) {
+    final markers = _notifier.state.repeaters.map((repeater) {
       return Marker(
         point: repeater.position,
         width: 30,
@@ -713,7 +653,7 @@ class _MapScreenState extends State<MapScreen> {
     final markers = [
       // Main location dot
       Marker(
-        point: _currentPosition!,
+        point: _notifier.state.currentPosition!,
         width: 20,
         height: 20,
         child: Container(
@@ -727,10 +667,10 @@ class _MapScreenState extends State<MapScreen> {
     ];
     
     // Add ping pulse animation when auto-pinging
-    if (_showPingPulse) {
+    if (_notifier.state.showPingPulse) {
       markers.add(
         Marker(
-          point: _currentPosition!,
+          point: _notifier.state.currentPosition!,
           width: 60,
           height: 60,
           child: TweenAnimationBuilder(
@@ -771,40 +711,40 @@ class _MapScreenState extends State<MapScreen> {
               Row(
                 children: [
                   Icon(
-                    _loraConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                    _notifier.state.loraConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
                     size: 16,
-                    color: _loraConnected ? Colors.green : Colors.grey,
+                    color: _notifier.state.loraConnected ? Colors.green : Colors.grey,
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _loraConnected 
-                        ? (_connectionType == ConnectionType.usb ? 'USB' : 'BT')
+                    _notifier.state.loraConnected 
+                        ? (_notifier.state.connectionType == ConnectionType.usb ? 'USB' : 'BT')
                         : 'No LoRa',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _loraConnected ? Colors.green : Colors.grey,
+                      color: _notifier.state.loraConnected ? Colors.green : Colors.grey,
                     ),
                   ),
-                  if (_loraConnected && _batteryPercent != null)
+                  if (_notifier.state.loraConnected && _notifier.state.batteryPercent != null)
                     const SizedBox(width: 4),
-                  if (_loraConnected && _batteryPercent != null)
+                  if (_notifier.state.loraConnected && _notifier.state.batteryPercent != null)
                     Icon(
-                      _getBatteryIcon(_batteryPercent!),
+                      _getBatteryIcon(_notifier.state.batteryPercent!),
                       size: 14,
-                      color: _getBatteryColor(_batteryPercent!),
+                      color: _getBatteryColor(_notifier.state.batteryPercent!),
                     ),
-                  if (_loraConnected && _batteryPercent != null)
+                  if (_notifier.state.loraConnected && _notifier.state.batteryPercent != null)
                     const SizedBox(width: 2),
-                  if (_loraConnected && _batteryPercent != null)
+                  if (_notifier.state.loraConnected && _notifier.state.batteryPercent != null)
                     Text(
-                      '$_batteryPercent%',
+                      '$_notifier.state.batteryPercent%',
                       style: TextStyle(
                         fontSize: 11,
-                        color: _getBatteryColor(_batteryPercent!),
+                        color: _getBatteryColor(_notifier.state.batteryPercent!),
                       ),
                     ),
                   const Spacer(),
-                  if (!_loraConnected)
+                  if (!_notifier.state.loraConnected)
                     TextButton(
                       onPressed: _showConnectionDialog,
                       style: TextButton.styleFrom(
@@ -813,13 +753,13 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       child: const Text('Connect', style: TextStyle(fontSize: 12)),
                     ),
-                  if (_loraConnected)
+                  if (_notifier.state.loraConnected)
                     IconButton(
                       icon: const Icon(Icons.more_vert, size: 20),
                       onPressed: _disconnectLoRa,
                       tooltip: 'Disconnect',
                     ),
-                  if (_loraConnected)
+                  if (_notifier.state.loraConnected)
                     IconButton(
                       icon: const Icon(Icons.send, size: 20),
                       onPressed: _manualPing,
@@ -834,11 +774,11 @@ class _MapScreenState extends State<MapScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Samples: $_sampleCount',
+                    'Samples: $_notifier.state.sampleCount',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Coverage: ${_aggregationResult?.coverages.length ?? 0}',
+                    'Coverage: ${_notifier.state.aggregationResult?.coverages.length ?? 0}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -892,18 +832,18 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       _locationService.disableAutoPing();
     }
-    setState(() {
-      _displaySettings = _displaySettings.copyWith(autoPingEnabled: value ?? false);
-    });
+    _notifier.updateDisplaySettings(
+      _notifier.state.displaySettings.copyWith(autoPingEnabled: value ?? false),
+    );
   }
 
   Future<void> _manualPing() async {
-    if (!_loraConnected) {
+    if (!_notifier.state.loraConnected) {
       _showSnackBar('Connect LoRa device first');
       return;
     }
 
-    if (_currentPosition == null) {
+    if (_notifier.state.currentPosition == null) {
       _showSnackBar('Waiting for GPS location...');
       return;
     }
@@ -912,19 +852,19 @@ class _MapScreenState extends State<MapScreen> {
 
     // Send ping via LoRa companion
     final result = await _locationService.loraCompanion.ping(
-      latitude: _currentPosition!.latitude,
-      longitude: _currentPosition!.longitude,
+      latitude: _notifier.state.currentPosition!.latitude,
+      longitude: _notifier.state.currentPosition!.longitude,
     );
 
     // Create and save sample
     final geohash = GeohashUtils.sampleKey(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
+      _notifier.state.currentPosition!.latitude,
+      _notifier.state.currentPosition!.longitude,
     );
     
     final sample = Sample(
       id: '${DateTime.now().millisecondsSinceEpoch}_$geohash',
-      position: _currentPosition!,
+      position: _notifier.state.currentPosition!,
       timestamp: DateTime.now(),
       path: result.nodeId, // Save repeater/node ID
       geohash: geohash,
@@ -1084,13 +1024,13 @@ class _MapScreenState extends State<MapScreen> {
 
 
   String _getPingIntervalDescription() {
-    if (_displaySettings.pingIntervalMeters < 100) {
-      return '${_displaySettings.pingIntervalMeters.toInt()} meters (frequent)';
-    } else if (_displaySettings.pingIntervalMeters < 1000) {
-      return '${_displaySettings.pingIntervalMeters.toInt()} meters';
+    if (_notifier.state.displaySettings.pingIntervalMeters < 100) {
+      return '${_notifier.state.displaySettings.pingIntervalMeters.toInt()} meters (frequent)';
+    } else if (_notifier.state.displaySettings.pingIntervalMeters < 1000) {
+      return '${_notifier.state.displaySettings.pingIntervalMeters.toInt()} meters';
     } else {
-      final miles = (_displaySettings.pingIntervalMeters / 1609.34).toStringAsFixed(1);
-      return '$miles miles (${_displaySettings.pingIntervalMeters.toInt()}m)';
+      final miles = (_notifier.state.displaySettings.pingIntervalMeters / 1609.34).toStringAsFixed(1);
+      return '$miles miles (${_notifier.state.displaySettings.pingIntervalMeters.toInt()}m)';
     }
   }
 
@@ -1131,18 +1071,16 @@ class _MapScreenState extends State<MapScreen> {
 
     if (selected != null) {
       final interval = double.parse(selected);
-      setState(() {
-        _displaySettings = _displaySettings.copyWith(pingIntervalMeters: interval);
-      });
+      _notifier.setPingIntervalMeters(interval);
       // Update location service ping interval
-      _locationService.setPingInterval(_displaySettings.pingIntervalMeters);
+      _locationService.setPingInterval(_notifier.state.displaySettings.pingIntervalMeters);
       await _settingsService.setPingInterval(interval);
       _showSnackBar('Ping interval: ${_getPingIntervalDescription()}');
     }
   }
 
   String _getCoverageResolutionDescription() {
-    switch (_displaySettings.coveragePrecision) {
+    switch (_notifier.state.displaySettings.coveragePrecision) {
       case 4:
         return 'Regional (~20km squares)';
       case 5:
@@ -1200,9 +1138,7 @@ class _MapScreenState extends State<MapScreen> {
 
     if (selected != null) {
       final precision = int.parse(selected);
-      setState(() {
-        _displaySettings = _displaySettings.copyWith(coveragePrecision: precision);
-      });
+      _notifier.setCoveragePrecision(precision);
       await _settingsService.setCoveragePrecision(precision);
       // Reload samples with new precision
       await _loadSamples();
@@ -1211,7 +1147,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _setIgnoredRepeater() async {
-    final controller = TextEditingController(text: _displaySettings.ignoredRepeaterPrefix ?? '');
+    final controller = TextEditingController(text: _notifier.state.displaySettings.ignoredRepeaterPrefix ?? '');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1252,17 +1188,15 @@ class _MapScreenState extends State<MapScreen> {
 
     if (confirmed == true) {
       final prefix = controller.text.isEmpty ? null : controller.text;
-      setState(() {
-        _displaySettings = _displaySettings.copyWith(ignoredRepeaterPrefix: prefix);
-      });
-      _locationService.loraCompanion.setIgnoredRepeaterPrefix(_displaySettings.ignoredRepeaterPrefix);
+      _notifier.setIgnoredRepeaterPrefix(prefix);
+      _locationService.loraCompanion.setIgnoredRepeaterPrefix(_notifier.state.displaySettings.ignoredRepeaterPrefix);
       await _settingsService.setIgnoredRepeaterPrefix(prefix);
       _showSnackBar('Repeater prefix updated');
     }
   }
 
   Future<void> _setIncludeOnlyRepeaters() async {
-    final controller = TextEditingController(text: _displaySettings.includeOnlyRepeaters ?? '');
+    final controller = TextEditingController(text: _notifier.state.displaySettings.includeOnlyRepeaters ?? '');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1304,10 +1238,7 @@ class _MapScreenState extends State<MapScreen> {
 
     if (confirmed == true) {
       final prefixes = controller.text.isEmpty ? null : controller.text;
-      setState(() {
-        _displaySettings = _displaySettings.copyWith(includeOnlyRepeaters: prefixes);
-      });
-      _recomputeFilteredSamples();
+      _notifier.setIncludeOnlyRepeaters(prefixes);
       await _settingsService.setIncludeOnlyRepeaters(prefixes);
       _showSnackBar('Repeater whitelist updated');
     }
@@ -1352,44 +1283,36 @@ class _MapScreenState extends State<MapScreen> {
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Show Coverage Boxes'),
-              value: _displaySettings.showCoverage,
+              value: _notifier.state.displaySettings.showCoverage,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showCoverage: value);
-                });
+                _notifier.setShowCoverage(value);
                 await _settingsService.setShowCoverage(value);
                 Navigator.pop(context);
               },
             ),
             SwitchListTile(
               title: const Text('Show Samples'),
-              value: _displaySettings.showSamples,
+              value: _notifier.state.displaySettings.showSamples,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showSamples: value);
-                });
+                _notifier.setShowSamples(value);
                 await _settingsService.setShowSamples(value);
                 Navigator.pop(context);
               },
             ),
             SwitchListTile(
               title: const Text('Show Edges'),
-              value: _displaySettings.showEdges,
+              value: _notifier.state.displaySettings.showEdges,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showEdges: value);
-                });
+                _notifier.setShowEdges(value);
                 await _settingsService.setShowEdges(value);
                 Navigator.pop(context);
               },
             ),
             SwitchListTile(
               title: const Text('Show Repeaters'),
-              value: _displaySettings.showRepeaters,
+              value: _notifier.state.displaySettings.showRepeaters,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showRepeaters: value);
-                });
+                _notifier.setShowRepeaters(value);
                 await _settingsService.setShowRepeaters(value);
                 Navigator.pop(context);
               },
@@ -1397,12 +1320,9 @@ class _MapScreenState extends State<MapScreen> {
             SwitchListTile(
               title: const Text('Show GPS Samples'),
               subtitle: const Text('Show blue GPS-only markers'),
-              value: _displaySettings.showGpsSamples,
+              value: _notifier.state.displaySettings.showGpsSamples,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showGpsSamples: value);
-                });
-                _recomputeFilteredSamples();
+                _notifier.setShowGpsSamples(value);
                 await _settingsService.setShowGpsSamples(value);
                 Navigator.pop(context);
               },
@@ -1410,12 +1330,9 @@ class _MapScreenState extends State<MapScreen> {
             SwitchListTile(
               title: const Text('Show Successful Pings Only'),
               subtitle: const Text('Hide failed pings and GPS-only samples'),
-              value: _displaySettings.showSuccessfulOnly,
+              value: _notifier.state.displaySettings.showSuccessfulOnly,
               onChanged: (value) async {
-                setState(() {
-                  _displaySettings = _displaySettings.copyWith(showSuccessfulOnly: value);
-                });
-                _recomputeFilteredSamples();
+                _notifier.setShowSuccessfulOnly(value);
                 Navigator.pop(context);
                 _showSnackBar(value ? 'Showing successful only' : 'Showing all samples');
               },
@@ -1423,11 +1340,9 @@ class _MapScreenState extends State<MapScreen> {
             SwitchListTile(
               title: const Text('Lock Rotation to North'),
               subtitle: const Text('Prevent map rotation'),
-              value: _lockRotationNorth,
+              value: _notifier.state.lockRotationNorth,
               onChanged: (value) async {
-                setState(() {
-                  _lockRotationNorth = value;
-                });
+                _notifier.setLockRotation(value);
                 Navigator.pop(context);
                 _showSnackBar(value ? 'Rotation locked' : 'Rotation unlocked');
               },
@@ -1441,12 +1356,12 @@ class _MapScreenState extends State<MapScreen> {
                 _showThemeSelector();
               },
             ),
-            if (_loraConnected)
+            if (_notifier.state.loraConnected)
               ListTile(
                 title: const Text('Scan for Repeaters'),
-                subtitle: Text(_repeaters.isEmpty 
+                subtitle: Text(_notifier.state.repeaters.isEmpty 
                     ? 'Find nearby LoRa nodes' 
-                    : '${_repeaters.length} repeater(s) found'),
+                    : '${_notifier.state.repeaters.length} repeater(s) found'),
                 leading: const Icon(Icons.cell_tower),
                 trailing: const Icon(Icons.search),
                 onTap: () {
@@ -1454,7 +1369,7 @@ class _MapScreenState extends State<MapScreen> {
                   _scanForRepeaters();
                 },
               ),
-            if (_loraConnected)
+            if (_notifier.state.loraConnected)
               ListTile(
                 title: const Text('Refresh Contact List'),
                 subtitle: const Text('Update repeater names from device'),
@@ -1467,24 +1382,22 @@ class _MapScreenState extends State<MapScreen> {
             ListTile(
               title: const Text('Color Mode'),
               trailing: DropdownButton<String>(
-                value: _displaySettings.colorMode,
+                value: _notifier.state.displaySettings.colorMode,
                 items: const [
                   DropdownMenuItem(value: 'quality', child: Text('Quality')),
                   DropdownMenuItem(value: 'age', child: Text('Age')),
                 ],
                 onChanged: (value) async {
-                  setState(() {
-                    _displaySettings = _displaySettings.copyWith(colorMode: value!);
-                  });
-                  await _settingsService.setColorMode(value!);
+                  _notifier.setColorMode(value!);
+                  await _settingsService.setColorMode(value);
                   Navigator.pop(context);
                 },
               ),
             ),
             ListTile(
               title: const Text('Ignore Mobile Repeater'),
-              subtitle: Text(_displaySettings.ignoredRepeaterPrefix != null 
-                  ? 'Filtering: ${_displaySettings.ignoredRepeaterPrefix}*' 
+              subtitle: Text(_notifier.state.displaySettings.ignoredRepeaterPrefix != null 
+                  ? 'Filtering: ${_notifier.state.displaySettings.ignoredRepeaterPrefix}*' 
                   : 'Not filtering'),
               trailing: const Icon(Icons.edit),
               onTap: () {
@@ -1494,8 +1407,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
             ListTile(
               title: const Text('Include Only Repeaters'),
-              subtitle: Text(_displaySettings.includeOnlyRepeaters != null && _displaySettings.includeOnlyRepeaters!.isNotEmpty
-                  ? 'Whitelist: ${_displaySettings.includeOnlyRepeaters}' 
+              subtitle: Text(_notifier.state.displaySettings.includeOnlyRepeaters != null && _notifier.state.displaySettings.includeOnlyRepeaters!.isNotEmpty
+                  ? 'Whitelist: ${_notifier.state.displaySettings.includeOnlyRepeaters}' 
                   : 'Show all repeaters'),
               trailing: const Icon(Icons.edit),
               onTap: () {
@@ -1624,7 +1537,7 @@ class _MapScreenState extends State<MapScreen> {
     
     if (confirmed == true) {
       // Disable auto-ping first
-      if (_displaySettings.autoPingEnabled) {
+      if (_notifier.state.displaySettings.autoPingEnabled) {
         _locationService.disableAutoPing();
       }
       
@@ -1651,7 +1564,7 @@ class _MapScreenState extends State<MapScreen> {
   }
   
   Future<void> _refreshContacts() async {
-    if (!_loraConnected) {
+    if (!_notifier.state.loraConnected) {
       _showSnackBar('Connect LoRa device first');
       return;
     }
@@ -1668,7 +1581,7 @@ class _MapScreenState extends State<MapScreen> {
   }
   
   Future<void> _scanForRepeaters() async {
-    if (!_loraConnected) {
+    if (!_notifier.state.loraConnected) {
       _showSnackBar('Connect LoRa device first');
       return;
     }
@@ -1677,9 +1590,15 @@ class _MapScreenState extends State<MapScreen> {
     
     final repeaters = await _locationService.loraCompanion.scanForRepeaters();
     
-    setState(() {
-      _repeaters = repeaters;
-    });
+    _notifier.updateFromSampleLoad(
+      samples: _notifier.state.samples,
+      sampleCount: _notifier.state.sampleCount,
+      aggregationResult: _notifier.state.aggregationResult ?? AggregationService.buildIndexes([], []),
+      loraConnected: _notifier.state.loraConnected,
+      connectionType: _notifier.state.connectionType,
+      autoPingEnabled: _notifier.state.displaySettings.autoPingEnabled,
+      repeaters: repeaters,
+    );
     
     if (repeaters.isEmpty) {
       _showSnackBar('No repeaters found');
@@ -1747,7 +1666,7 @@ class _MapScreenState extends State<MapScreen> {
     
     if (selected != null) {
       await appState.setThemeMode(selected);
-      setState(() {}); // Refresh to update map tiles
+      // Theme change triggers rebuild via MyApp's ChangeNotifier — no setState needed.
     }
   }
   
@@ -1765,7 +1684,7 @@ class _MapScreenState extends State<MapScreen> {
     }
     
     // First check discovered repeaters list
-    final repeater = _repeaters.firstWhere(
+    final repeater = _notifier.state.repeaters.firstWhere(
       (r) => r.id == fullId,
       orElse: () => Repeater(id: fullId!, position: const LatLng(0, 0), timestamp: DateTime.now()),
     );
@@ -1979,14 +1898,14 @@ class _MapScreenState extends State<MapScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nearby Repeaters (${_repeaters.length})'),
+        title: Text('Nearby Repeaters (${_notifier.state.repeaters.length})'),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: _repeaters.length,
+            itemCount: _notifier.state.repeaters.length,
             itemBuilder: (context, index) {
-              final repeater = _repeaters[index];
+              final repeater = _notifier.state.repeaters[index];
               return ListTile(
                 leading: const Icon(Icons.cell_tower, color: Colors.purple),
                 title: Text(repeater.name ?? 'Repeater ${repeater.id}'),
@@ -2042,7 +1961,7 @@ class _MapScreenState extends State<MapScreen> {
       final repeaterNames = <String, String>{};
       
       // Add names from discovered repeaters
-      for (final repeater in _repeaters) {
+      for (final repeater in _notifier.state.repeaters) {
         if (repeater.name != null) {
           repeaterNames[repeater.id] = repeater.name!;
         }
