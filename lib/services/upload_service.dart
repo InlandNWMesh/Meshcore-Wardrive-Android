@@ -15,6 +15,9 @@ class UploadService {
   static const String defaultApiUrl = 'https://wardrive.inwmesh.org/api/samples/';
 
   final DatabaseService _db = DatabaseService();
+  final http.Client _httpClient;
+
+  UploadService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
 
   bool _isDefaultEndpoint(String baseUrl) {
     String norm(String u) {
@@ -81,7 +84,7 @@ class UploadService {
     try {
       final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
       final url = Uri.parse('${base}${token}/validate');
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final response = await _httpClient.get(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) return null;
       if (response.statusCode == 429) return 'Too many attempts — try again shortly';
       return 'Invalid or disabled token';
@@ -136,7 +139,7 @@ class UploadService {
         }
       }
 
-      final response = await http.post(
+      final response = await _httpClient.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'samples': samplesJson}),
