@@ -17,6 +17,7 @@ import '../utils/geohash_utils.dart';
 import 'package:geohash_plus/geohash_plus.dart' as geohash;
 import 'package:usb_serial/usb_serial.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
@@ -137,11 +138,14 @@ class _MapScreenState extends State<MapScreen> {
     
     await _loadSamples();
     await _getCurrentLocation();
-    
+
     // Update periodically
     _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       _loadSamples();
     });
+
+    // Validate contributor token — force settings screen if missing or rejected.
+    await _checkTokenOnStartup();
   }
   
   Future<void> _loadSettings() async {
@@ -2095,59 +2099,147 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _configureUploadUrl() async {
+  /// Shows the upload settings dialog.
+  /// When [required] is true, Cancel is hidden and Save is only enabled
+  /// after a successful token validation — used on first-run / invalid token.
+  Future<void> _configureUploadUrl({bool required = false}) async {
     final currentUrl = await _uploadService.getApiUrl();
-    final controller = TextEditingController(text: currentUrl);
+    final currentToken = await _uploadService.getContributorToken();
+    final urlController = TextEditingController(text: currentUrl);
+    final tokenController = TextEditingController(text: currentToken);
 
-    final confirmed = await showDialog<bool>(
+    // validation state: null=idle, true=valid, false=invalid
+    bool? tokenValid;
+    bool tokenValidating = false;
+    String? tokenError;
+
+    await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Configure Upload URL'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Enter the URL of your wardrive map API endpoint:',
-              style: TextStyle(fontSize: 13),
+      barrierDismissible: !required,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          Future<void> runValidation() async {
+            setState(() { tokenValidating = true; tokenValid = null; tokenError = null; });
+            final error = await _uploadService.validateToken(
+              urlController.text, tokenController.text);
+            setState(() {
+              tokenValidating = false;
+              tokenValid = error == null;
+              tokenError = error;
+            });
+          }
+
+          Future<void> save() async {
+            await _uploadService.setApiUrl(urlController.text);
+            await _uploadService.setContributorToken(tokenController.text);
+            if (context.mounted) Navigator.pop(context);
+            _showSnackBar('Upload settings saved');
+          }
+
+          return AlertDialog(
+            title: Text(required ? 'Token Required' : 'Upload Settings'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (required) ...[
+                  const Text(
+                    'A valid contributor token is required to use this app. '
+                    'Enter the token from your invite page.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Server URL',
+                    hintText: 'https://wardrive.inwmesh.org/api/samples/',
+                    isDense: true,
+                  ),
+                  keyboardType: TextInputType.url,
+                  onChanged: (_) => setState(() { tokenValid = null; tokenError = null; }),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: tokenController,
+                  decoration: InputDecoration(
+                    labelText: 'Contributor Token',
+                    hintText: 'Your token from wardrive.inwmesh.org',
+                    isDense: true,
+                    suffixIcon: tokenValidating
+                        ? const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: SizedBox(
+                              width: 16, height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : tokenValid == true
+                            ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
+                            : tokenValid == false
+                                ? const Icon(Icons.cancel, color: Colors.red, size: 20)
+                                : null,
+                    errorText: tokenError,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                    TextInputFormatter.withFunction((oldValue, newValue) =>
+                        newValue.copyWith(text: newValue.text.toUpperCase())),
+                  ],
+                  onChanged: (val) {
+                    setState(() { tokenValid = null; tokenError = null; });
+                    if (val.length >= 8) runValidation();
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'API URL',
-                hintText: 'https://wardrive.inwmesh.org/api/samples',
-                isDense: true,
+            actions: [
+              if (!required)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+              TextButton(
+                onPressed: tokenValidating ? null : runValidation,
+                child: const Text('Test'),
               ),
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: () {
-                controller.text = UploadService.defaultApiUrl;
-              },
-              icon: const Icon(Icons.restore, size: 16),
-              label: const Text('Reset to default', style: TextStyle(fontSize: 12)),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
+              TextButton(
+                onPressed: (required && tokenValid != true) ? null : save,
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
 
-    if (confirmed == true) {
-      await _uploadService.setApiUrl(controller.text);
-      _showSnackBar('Upload URL saved');
+  /// Called on startup. Validates the stored token; forces the settings
+  /// dialog if no token is set or the server explicitly rejects it.
+  Future<void> _checkTokenOnStartup() async {
+    final token = await _uploadService.getContributorToken();
+    final url = await _uploadService.getApiUrl();
+
+    if (token.isEmpty) {
+      // No token at all — must set one before continuing.
+      if (mounted) await _configureUploadUrl(required: true);
+      return;
     }
+
+    final error = await _uploadService.validateToken(url, token);
+    if (error == null) return; // valid — proceed normally
+
+    if (!mounted) return;
+
+    // Network error: warn but don't block (they may be offline).
+    if (error == 'Could not reach server') {
+      _showSnackBar('Could not reach server — working offline');
+      return;
+    }
+
+    // Server explicitly rejected the token — force re-entry.
+    await _configureUploadUrl(required: true);
   }
   
 }

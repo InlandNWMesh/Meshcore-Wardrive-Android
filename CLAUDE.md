@@ -74,7 +74,7 @@ MapScreen renders colored squares on flutter_map (OpenStreetMap)
 - Command: `DISCOVER_REQ` (switched from legacy `#meshwar` channel messages in v1.0.19)
 - Each ping gets an 8-character unique ID; MQTT responses include this ID for correlation
 - 20-second timeout window to mark a sample success/fail
-- Auto-ping fires when the user has traveled the configured distance (default 805m / 0.5 miles)
+- Auto-ping fires when the user has traveled the configured distance (default 50m)
 
 ### Coverage Visualization
 

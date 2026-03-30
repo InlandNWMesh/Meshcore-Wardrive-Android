@@ -74,7 +74,7 @@ class SettingsService {
   
   Future<double> getPingInterval() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_pingIntervalKey) ?? 805.0; // Default 0.5 miles
+    return prefs.getDouble(_pingIntervalKey) ?? 50.0; // Default 50 meters
   }
   
   Future<void> setPingInterval(double value) async {
