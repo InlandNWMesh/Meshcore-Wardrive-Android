@@ -26,6 +26,8 @@ import 'debug_log_screen.dart';
 import 'debug_diagnostics_screen.dart';
 import '../main.dart';
 import '../constants/app_version.dart';
+import '../constants/map_constants.dart';
+import '../models/map_display_settings.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -48,18 +50,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Sample> _filteredSamples = [];
   AggregationResult? _aggregationResult;
   
-  String _colorMode = 'quality';
-  bool _showSamples = false;
-  bool _showGpsSamples = true; // Show GPS-only samples (null pingSuccess)
-  bool _showSuccessfulOnly = false; // Show only samples with successful pings
-  bool _showCoverage = true; // Show coverage boxes
-  bool _showEdges = true;
-  bool _showRepeaters = true;
-  bool _autoPingEnabled = false;
-  String? _ignoredRepeaterPrefix;
-  String? _includeOnlyRepeaters; // Comma-separated list of repeater prefixes to show
-  double _pingIntervalMeters = 805.0; // Default 0.5 miles
-  int _coveragePrecision = 6; // Default precision 6 (~1.2km squares)
+  MapDisplaySettings _displaySettings = const MapDisplaySettings();
   
   // Repeaters
   List<Repeater> _repeaters = [];
@@ -126,8 +117,8 @@ class _MapScreenState extends State<MapScreen> {
         setState(() {
           _showPingPulse = true;
         });
-        // Hide pulse after 2 seconds
-        Future.delayed(const Duration(seconds: 2), () {
+        // Hide pulse after kPingPulseDurationSeconds
+        Future.delayed(Duration(seconds: kPingPulseDurationSeconds), () {
           if (mounted) {
             setState(() {
               _showPingPulse = false;
@@ -141,7 +132,7 @@ class _MapScreenState extends State<MapScreen> {
     await _getCurrentLocation();
 
     // Update periodically
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _updateTimer = Timer.periodic(Duration(seconds: kMapUpdateIntervalSeconds), (_) {
       _loadSamples();
     });
 
@@ -162,16 +153,18 @@ class _MapScreenState extends State<MapScreen> {
     final includeOnly = await _settingsService.getIncludeOnlyRepeaters();
     
     setState(() {
-      _showSamples = showSamples;
-      _showGpsSamples = showGpsSamples;
-      _showCoverage = showCoverage;
-      _showEdges = showEdges;
-      _showRepeaters = showRepeaters;
-      _colorMode = colorMode;
-      _pingIntervalMeters = pingInterval;
-      _coveragePrecision = coveragePrecision;
-      _ignoredRepeaterPrefix = ignoredPrefix;
-      _includeOnlyRepeaters = includeOnly;
+      _displaySettings = MapDisplaySettings(
+        showSamples: showSamples,
+        showGpsSamples: showGpsSamples,
+        showCoverage: showCoverage,
+        showEdges: showEdges,
+        showRepeaters: showRepeaters,
+        colorMode: colorMode,
+        pingIntervalMeters: pingInterval,
+        coveragePrecision: coveragePrecision,
+        ignoredRepeaterPrefix: ignoredPrefix,
+        includeOnlyRepeaters: includeOnly,
+      );
     });
     
     // Apply to services
@@ -182,10 +175,10 @@ class _MapScreenState extends State<MapScreen> {
 
   void _recomputeFilteredSamples() {
     _filteredSamples = _samples.where((sample) {
-      if (!_showGpsSamples && sample.pingSuccess == null) return false;
-      if (_showSuccessfulOnly && sample.pingSuccess != true) return false;
-      if (_includeOnlyRepeaters != null && _includeOnlyRepeaters!.isNotEmpty) {
-        final allowedPrefixes = _includeOnlyRepeaters!
+      if (!_displaySettings.showGpsSamples && sample.pingSuccess == null) return false;
+      if (_displaySettings.showSuccessfulOnly && sample.pingSuccess != true) return false;
+      if (_displaySettings.includeOnlyRepeaters != null && _displaySettings.includeOnlyRepeaters!.isNotEmpty) {
+        final allowedPrefixes = _displaySettings.includeOnlyRepeaters!
             .split(',').map((s) => s.trim().toUpperCase()).toList();
         final sampleNodeId = sample.path?.toUpperCase() ?? '';
         if (!allowedPrefixes.any((prefix) => sampleNodeId.startsWith(prefix))) return false;
@@ -202,7 +195,7 @@ class _MapScreenState extends State<MapScreen> {
         _currentPosition = pos;
       });
       // Move map to user's current location on startup
-      _mapController.move(pos, 13.0);
+      _mapController.move(pos, kDefaultMapZoom);
     }
   }
 
@@ -218,18 +211,18 @@ class _MapScreenState extends State<MapScreen> {
     
     // Aggregate data with user's chosen coverage precision and repeaters
     final result = AggregationService.buildIndexes(
-      samples, 
+      samples,
       discoveredRepeaters,
-      coveragePrecision: _coveragePrecision,
+      coveragePrecision: _displaySettings.coveragePrecision,
     );
-    
+
     setState(() {
       _samples = samples;
       _sampleCount = count;
       _aggregationResult = result;
       _loraConnected = loraService.isDeviceConnected;
       _connectionType = loraService.connectionType;
-      _autoPingEnabled = _locationService.isAutoPingEnabled;
+      _displaySettings = _displaySettings.copyWith(autoPingEnabled: _locationService.isAutoPingEnabled);
       _repeaters = discoveredRepeaters;
     });
     _recomputeFilteredSamples();
@@ -242,7 +235,7 @@ class _MapScreenState extends State<MapScreen> {
       _locationService.disableAutoPing();
       setState(() {
         _isTracking = false;
-        _autoPingEnabled = false;
+        _displaySettings = _displaySettings.copyWith(autoPingEnabled: false);
       });
     } else {
       // Start tracking
@@ -253,7 +246,7 @@ class _MapScreenState extends State<MapScreen> {
           _locationService.enableAutoPing();
           setState(() {
             _isTracking = true;
-            _autoPingEnabled = true;
+            _displaySettings = _displaySettings.copyWith(autoPingEnabled: true);
           });
           _showSnackBar('Location tracking and auto-ping started');
         } else {
@@ -553,7 +546,7 @@ class _MapScreenState extends State<MapScreen> {
       mapController: _mapController,
       options: MapOptions(
         initialCenter: _currentPosition ?? GeohashUtils.centerPos,
-        initialZoom: 13.0,
+        initialZoom: kDefaultMapZoom,
         minZoom: 3.0,
         maxZoom: 18.0,
         interactionOptions: InteractionOptions(
@@ -582,10 +575,10 @@ class _MapScreenState extends State<MapScreen> {
           subdomains: isDarkMode ? const ['a', 'b', 'c', 'd'] : const [],
           userAgentPackageName: 'com.meshcore.wardrive',
         ),
-        if (_showCoverage) ..._buildCoverageLayers(),
-        if (_showSamples) _buildSampleLayer(),
-        if (_showEdges) _buildEdgeLayer(),
-        if (_showRepeaters) _buildRepeaterLayer(),
+        if (_displaySettings.showCoverage) ..._buildCoverageLayers(),
+        if (_displaySettings.showSamples) _buildSampleLayer(),
+        if (_displaySettings.showEdges) _buildEdgeLayer(),
+        if (_displaySettings.showRepeaters) _buildRepeaterLayer(),
         if (_currentPosition != null) _buildCurrentLocationLayer(),
       ],
     );
@@ -599,7 +592,7 @@ class _MapScreenState extends State<MapScreen> {
     
     for (final coverage in _aggregationResult!.coverages) {
       final gh = geohash.GeoHash.decode(coverage.id);
-      final color = Color(AggregationService.getCoverageColor(coverage, _colorMode));
+      final color = Color(AggregationService.getCoverageColor(coverage, _displaySettings.colorMode));
       final opacity = AggregationService.getCoverageOpacity(coverage);
       
       // Get corners from geohash bounds
@@ -900,7 +893,7 @@ class _MapScreenState extends State<MapScreen> {
       _locationService.disableAutoPing();
     }
     setState(() {
-      _autoPingEnabled = value ?? false;
+      _displaySettings = _displaySettings.copyWith(autoPingEnabled: value ?? false);
     });
   }
 
@@ -1091,13 +1084,13 @@ class _MapScreenState extends State<MapScreen> {
 
 
   String _getPingIntervalDescription() {
-    if (_pingIntervalMeters < 100) {
-      return '${_pingIntervalMeters.toInt()} meters (frequent)';
-    } else if (_pingIntervalMeters < 1000) {
-      return '${_pingIntervalMeters.toInt()} meters';
+    if (_displaySettings.pingIntervalMeters < 100) {
+      return '${_displaySettings.pingIntervalMeters.toInt()} meters (frequent)';
+    } else if (_displaySettings.pingIntervalMeters < 1000) {
+      return '${_displaySettings.pingIntervalMeters.toInt()} meters';
     } else {
-      final miles = (_pingIntervalMeters / 1609.34).toStringAsFixed(1);
-      return '$miles miles (${_pingIntervalMeters.toInt()}m)';
+      final miles = (_displaySettings.pingIntervalMeters / 1609.34).toStringAsFixed(1);
+      return '$miles miles (${_displaySettings.pingIntervalMeters.toInt()}m)';
     }
   }
 
@@ -1139,17 +1132,17 @@ class _MapScreenState extends State<MapScreen> {
     if (selected != null) {
       final interval = double.parse(selected);
       setState(() {
-        _pingIntervalMeters = interval;
+        _displaySettings = _displaySettings.copyWith(pingIntervalMeters: interval);
       });
       // Update location service ping interval
-      _locationService.setPingInterval(_pingIntervalMeters);
+      _locationService.setPingInterval(_displaySettings.pingIntervalMeters);
       await _settingsService.setPingInterval(interval);
       _showSnackBar('Ping interval: ${_getPingIntervalDescription()}');
     }
   }
 
   String _getCoverageResolutionDescription() {
-    switch (_coveragePrecision) {
+    switch (_displaySettings.coveragePrecision) {
       case 4:
         return 'Regional (~20km squares)';
       case 5:
@@ -1208,7 +1201,7 @@ class _MapScreenState extends State<MapScreen> {
     if (selected != null) {
       final precision = int.parse(selected);
       setState(() {
-        _coveragePrecision = precision;
+        _displaySettings = _displaySettings.copyWith(coveragePrecision: precision);
       });
       await _settingsService.setCoveragePrecision(precision);
       // Reload samples with new precision
@@ -1218,7 +1211,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _setIgnoredRepeater() async {
-    final controller = TextEditingController(text: _ignoredRepeaterPrefix ?? '');
+    final controller = TextEditingController(text: _displaySettings.ignoredRepeaterPrefix ?? '');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1260,16 +1253,16 @@ class _MapScreenState extends State<MapScreen> {
     if (confirmed == true) {
       final prefix = controller.text.isEmpty ? null : controller.text;
       setState(() {
-        _ignoredRepeaterPrefix = prefix;
+        _displaySettings = _displaySettings.copyWith(ignoredRepeaterPrefix: prefix);
       });
-      _locationService.loraCompanion.setIgnoredRepeaterPrefix(_ignoredRepeaterPrefix);
+      _locationService.loraCompanion.setIgnoredRepeaterPrefix(_displaySettings.ignoredRepeaterPrefix);
       await _settingsService.setIgnoredRepeaterPrefix(prefix);
       _showSnackBar('Repeater prefix updated');
     }
   }
 
   Future<void> _setIncludeOnlyRepeaters() async {
-    final controller = TextEditingController(text: _includeOnlyRepeaters ?? '');
+    final controller = TextEditingController(text: _displaySettings.includeOnlyRepeaters ?? '');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1312,7 +1305,7 @@ class _MapScreenState extends State<MapScreen> {
     if (confirmed == true) {
       final prefixes = controller.text.isEmpty ? null : controller.text;
       setState(() {
-        _includeOnlyRepeaters = prefixes;
+        _displaySettings = _displaySettings.copyWith(includeOnlyRepeaters: prefixes);
       });
       _recomputeFilteredSamples();
       await _settingsService.setIncludeOnlyRepeaters(prefixes);
@@ -1359,10 +1352,10 @@ class _MapScreenState extends State<MapScreen> {
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Show Coverage Boxes'),
-              value: _showCoverage,
+              value: _displaySettings.showCoverage,
               onChanged: (value) async {
                 setState(() {
-                  _showCoverage = value;
+                  _displaySettings = _displaySettings.copyWith(showCoverage: value);
                 });
                 await _settingsService.setShowCoverage(value);
                 Navigator.pop(context);
@@ -1370,10 +1363,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
             SwitchListTile(
               title: const Text('Show Samples'),
-              value: _showSamples,
+              value: _displaySettings.showSamples,
               onChanged: (value) async {
                 setState(() {
-                  _showSamples = value;
+                  _displaySettings = _displaySettings.copyWith(showSamples: value);
                 });
                 await _settingsService.setShowSamples(value);
                 Navigator.pop(context);
@@ -1381,10 +1374,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
             SwitchListTile(
               title: const Text('Show Edges'),
-              value: _showEdges,
+              value: _displaySettings.showEdges,
               onChanged: (value) async {
                 setState(() {
-                  _showEdges = value;
+                  _displaySettings = _displaySettings.copyWith(showEdges: value);
                 });
                 await _settingsService.setShowEdges(value);
                 Navigator.pop(context);
@@ -1392,10 +1385,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
             SwitchListTile(
               title: const Text('Show Repeaters'),
-              value: _showRepeaters,
+              value: _displaySettings.showRepeaters,
               onChanged: (value) async {
                 setState(() {
-                  _showRepeaters = value;
+                  _displaySettings = _displaySettings.copyWith(showRepeaters: value);
                 });
                 await _settingsService.setShowRepeaters(value);
                 Navigator.pop(context);
@@ -1404,10 +1397,10 @@ class _MapScreenState extends State<MapScreen> {
             SwitchListTile(
               title: const Text('Show GPS Samples'),
               subtitle: const Text('Show blue GPS-only markers'),
-              value: _showGpsSamples,
+              value: _displaySettings.showGpsSamples,
               onChanged: (value) async {
                 setState(() {
-                  _showGpsSamples = value;
+                  _displaySettings = _displaySettings.copyWith(showGpsSamples: value);
                 });
                 _recomputeFilteredSamples();
                 await _settingsService.setShowGpsSamples(value);
@@ -1417,10 +1410,10 @@ class _MapScreenState extends State<MapScreen> {
             SwitchListTile(
               title: const Text('Show Successful Pings Only'),
               subtitle: const Text('Hide failed pings and GPS-only samples'),
-              value: _showSuccessfulOnly,
+              value: _displaySettings.showSuccessfulOnly,
               onChanged: (value) async {
                 setState(() {
-                  _showSuccessfulOnly = value;
+                  _displaySettings = _displaySettings.copyWith(showSuccessfulOnly: value);
                 });
                 _recomputeFilteredSamples();
                 Navigator.pop(context);
@@ -1474,14 +1467,14 @@ class _MapScreenState extends State<MapScreen> {
             ListTile(
               title: const Text('Color Mode'),
               trailing: DropdownButton<String>(
-                value: _colorMode,
+                value: _displaySettings.colorMode,
                 items: const [
                   DropdownMenuItem(value: 'quality', child: Text('Quality')),
                   DropdownMenuItem(value: 'age', child: Text('Age')),
                 ],
                 onChanged: (value) async {
                   setState(() {
-                    _colorMode = value!;
+                    _displaySettings = _displaySettings.copyWith(colorMode: value!);
                   });
                   await _settingsService.setColorMode(value!);
                   Navigator.pop(context);
@@ -1490,8 +1483,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
             ListTile(
               title: const Text('Ignore Mobile Repeater'),
-              subtitle: Text(_ignoredRepeaterPrefix != null 
-                  ? 'Filtering: ${_ignoredRepeaterPrefix}*' 
+              subtitle: Text(_displaySettings.ignoredRepeaterPrefix != null 
+                  ? 'Filtering: ${_displaySettings.ignoredRepeaterPrefix}*' 
                   : 'Not filtering'),
               trailing: const Icon(Icons.edit),
               onTap: () {
@@ -1501,8 +1494,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
             ListTile(
               title: const Text('Include Only Repeaters'),
-              subtitle: Text(_includeOnlyRepeaters != null && _includeOnlyRepeaters!.isNotEmpty
-                  ? 'Whitelist: ${_includeOnlyRepeaters}' 
+              subtitle: Text(_displaySettings.includeOnlyRepeaters != null && _displaySettings.includeOnlyRepeaters!.isNotEmpty
+                  ? 'Whitelist: ${_displaySettings.includeOnlyRepeaters}' 
                   : 'Show all repeaters'),
               trailing: const Icon(Icons.edit),
               onTap: () {
@@ -1631,7 +1624,7 @@ class _MapScreenState extends State<MapScreen> {
     
     if (confirmed == true) {
       // Disable auto-ping first
-      if (_autoPingEnabled) {
+      if (_displaySettings.autoPingEnabled) {
         _locationService.disableAutoPing();
       }
       
@@ -1797,7 +1790,7 @@ class _MapScreenState extends State<MapScreen> {
     final idOrName = repeaterName ?? sample.path ?? 'Unknown';
     final repeaterDisplay = (repeaterName != null)
         ? repeaterName
-        : (idOrName.length > 8 ? idOrName.substring(0, 8).toUpperCase() : idOrName.toUpperCase());
+        : (idOrName.length > kRepeaterIdPrefixLength ? idOrName.substring(0, kRepeaterIdPrefixLength).toUpperCase() : idOrName.toUpperCase());
     
     showDialog(
       context: context,
@@ -1862,12 +1855,12 @@ class _MapScreenState extends State<MapScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(repeater.name ?? 'Repeater ${(repeater.id.length > 8 ? repeater.id.substring(0,8) : repeater.id).toUpperCase()}'),
+        title: Text(repeater.name ?? 'Repeater ${(repeater.id.length > kRepeaterIdPrefixLength ? repeater.id.substring(0, kRepeaterIdPrefixLength) : repeater.id).toUpperCase()}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ID: ${(repeater.id.length > 8 ? repeater.id.substring(0,8) : repeater.id).toUpperCase()}', style: const TextStyle(fontFamily: 'monospace')),
+            Text('ID: ${(repeater.id.length > kRepeaterIdPrefixLength ? repeater.id.substring(0, kRepeaterIdPrefixLength) : repeater.id).toUpperCase()}', style: const TextStyle(fontFamily: 'monospace')),
             const SizedBox(height: 8),
             Text('Lat: ${repeater.position.latitude.toStringAsFixed(6)}'),
             Text('Lon: ${repeater.position.longitude.toStringAsFixed(6)}'),

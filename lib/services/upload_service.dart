@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_service.dart';
 import '../models/models.dart';
+import '../constants/map_constants.dart';
 import '../constants/app_version.dart';
 
 class UploadService {
@@ -112,14 +113,14 @@ class UploadService {
         'id': sample.id,
         'nodeId': (sample.path == null || sample.path!.isEmpty)
             ? 'Unknown'
-            : (sample.path!.length > 8 ? sample.path!.substring(0, 8).toUpperCase() : sample.path!.toUpperCase()),
+            : (sample.path!.length > kRepeaterIdPrefixLength ? sample.path!.substring(0, kRepeaterIdPrefixLength).toUpperCase() : sample.path!.toUpperCase()),
         'repeaterName': (() {
           final name = (sample.path != null && repeaterNames != null)
               ? repeaterNames![sample.path]
               : null;
           if (name != null && name.isNotEmpty) return name;
           if (sample.path == null || sample.path!.isEmpty) return 'Unknown';
-          final short = sample.path!.length > 8 ? sample.path!.substring(0, 8).toUpperCase() : sample.path!.toUpperCase();
+          final short = sample.path!.length > kRepeaterIdPrefixLength ? sample.path!.substring(0, kRepeaterIdPrefixLength).toUpperCase() : sample.path!.toUpperCase();
           return short;
         })(),
         'latitude': sample.position.latitude,

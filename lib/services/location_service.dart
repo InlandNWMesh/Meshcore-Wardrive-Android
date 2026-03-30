@@ -7,6 +7,7 @@ import '../models/models.dart';
 import 'database_service.dart';
 import 'lora_companion_service.dart';
 import '../utils/geohash_utils.dart';
+import '../constants/map_constants.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'persistent_debug_logger.dart';
@@ -337,7 +338,7 @@ class LocationService {
       
       // Update notification with result
       final shortId = (nodeId != null && nodeId.isNotEmpty)
-          ? (nodeId.length > 8 ? nodeId.substring(0, 8).toUpperCase() : nodeId.toUpperCase())
+          ? (nodeId.length > kRepeaterIdPrefixLength ? nodeId.substring(0, kRepeaterIdPrefixLength).toUpperCase() : nodeId.toUpperCase())
           : 'repeater';
       final resultText = pingSuccess ? '✅ Heard by $shortId' : '❌ No response';
       FlutterForegroundTask.updateService(
