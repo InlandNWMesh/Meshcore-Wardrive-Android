@@ -379,14 +379,14 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _checkForUpdates() async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.github.com/repos/mintylinux/Meshcore-Wardrive-Android/releases/latest'),
+        Uri.parse('https://api.github.com/repos/george-viaud/Meshcore-Wardrive-Android/releases/latest'),
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final tagName = data['tag_name'].toString();
-        // Extract version from tag like "Meshcore-Wardrive-Android-1.0.2"
-        final latestVersion = tagName.split('-').last;
+        // Extract version from tag like "v1.0.25"
+        final latestVersion = tagName.startsWith('v') ? tagName.substring(1) : tagName;
         
         if (latestVersion != appVersion) {
           if (!mounted) return;
@@ -426,7 +426,7 @@ class _MapScreenState extends State<MapScreen> {
   }
   
   Future<void> _openGitHub() async {
-    final url = Uri.parse('https://github.com/mintylinux/Meshcore-Wardrive-Android/releases');
+    final url = Uri.parse('https://github.com/george-viaud/Meshcore-Wardrive-Android/releases');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
