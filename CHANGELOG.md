@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.0.25 - 2026-03-30
+
+### Added
+- **Contributor Token field** — upload settings now has a dedicated Contributor Token field separate from the server URL; token is auto-uppercased as typed
+- **Live token validation** — token is validated against the server automatically when 8 characters are entered; manual Test button also available with inline green/red indicator
+- **Startup token check** — app forces the settings screen on launch if no token is set or the server rejects it; gracefully continues offline with a snackbar warning
+- **build_and_install.sh** — script for deterministic APK build and ADB install (`--build`, `--install`, or both)
+
+### Changed
+- **Default ping interval** changed from 805m (0.5 miles) to 50m
+- **Check for Updates** now points to the correct repository (george-viaud/Meshcore-Wardrive-Android) and correctly parses `v1.0.x` tag format
+
+### Fixed
+- APKs excluded from git tracking; distributed via GitHub Releases instead
+
 ## v1.0.24 - 2026-01-26
 
 ### Added

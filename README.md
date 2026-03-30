@@ -2,7 +2,7 @@
 
 A Flutter-based Android application for mapping MeshCore mesh network coverage in real-time.
 
-**Source Code:** [Meshcore-Wardrive-Android-Source](https://github.com/mintylinux/Meshcore-Wardrive-Android-Source)
+**Repository:** [george-viaud/Meshcore-Wardrive-Android](https://github.com/george-viaud/Meshcore-Wardrive-Android)
 
 ## 🚀 Quick Start
 
@@ -59,7 +59,7 @@ View the live community coverage map at: **https://wardrive.inwmesh.org**
 - **Color Mode**: Quality (signal strength) or Age (data freshness)
 
 ### Default Settings
-- Ping interval: 0.5 miles (805 meters)
+- Ping interval: 50 meters
 - Grid size: ~1.2km x 610m squares (precision 6)
 - GPS accuracy: High
 - Update frequency: Every 5 meters of movement
@@ -120,12 +120,13 @@ The top panel shows:
 
 ## 🤝 Contributing to Coverage
 
-Help build the community coverage map:
-1. Wardrive your local area
-2. Open Settings → Upload Data
-3. Your samples contribute to the global success rate statistics
+The community map is invite-only. To contribute:
+1. Receive an invite link from an admin at **wardrive.inwmesh.org**
+2. Register and copy your **Contributor Token**
+3. In the app: Settings → Configure API → paste your token into the **Contributor Token** field
+4. Wardrive your area — data uploads automatically (or manually via Settings → Upload Data)
 
-The more users contribute, the more accurate the coverage map becomes!
+The more contributors, the more accurate the coverage map becomes!
 
 ## 🆘 Support
 
@@ -135,13 +136,14 @@ For issues, questions, or feature requests:
 
 ## 🛠️ Development
 
-For developers who want to build from source, see the [source code repository](https://github.com/mintylinux/Meshcore-Wardrive-Android-Source) which includes:
+To build from source:
 
-- Complete Flutter project structure
-- Development setup instructions
-- Build configuration
-- Architecture documentation
-- Contributing guidelines
+```bash
+flutter pub get
+flutter build apk --debug
+# or use the helper script:
+./build_and_install.sh
+```
 
 ## 📄 License
 
@@ -159,7 +161,7 @@ For issues and questions:
 
 ---
 
-**Current Version:** 1.0.27
+**Current Version:** 1.0.25
 
 **Minimum Android Version:** Android 5.0 (API 21)
 

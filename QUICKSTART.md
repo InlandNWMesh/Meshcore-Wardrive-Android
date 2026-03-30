@@ -1,24 +1,21 @@
 # MeshCore Wardrive - Quick Start
 
-## Build and Install
+## Download
 
-The app has been successfully built! You can install it on your Android device.
+Get the latest APK from [GitHub Releases](https://github.com/george-viaud/Meshcore-Wardrive-Android/releases).
 
-### Install on Connected Device
+## Build and Install (from source)
 
 ```bash
-cd meshcore-wardrive-android
-flutter install
-```
+# Build and install in one step (phone must be connected via USB with debugging enabled):
+./build_and_install.sh
 
-### Or Install APK Manually
+# Build only:
+./build_and_install.sh --build
 
-The APK is located at:
+# Install only (uses last build):
+./build_and_install.sh --install
 ```
-build/app/outputs/flutter-apk/app-debug.apk
-```
-
-Transfer this file to your Android device and install it.
 
 ## First Launch
 
@@ -26,11 +23,15 @@ Transfer this file to your Android device and install it.
    - Location permissions (choose "Allow all the time" for best results)
    - Storage permissions (for exporting data)
 
-2. **Start Tracking**: Tap the green play button (bottom right)
-   - The button will turn red when tracking is active
-   - Your position will update automatically every 5 meters
+2. **Enter Contributor Token**: On first launch the app will prompt you to enter your Contributor Token.
+   - Get your token from [wardrive.inwmesh.org](https://wardrive.inwmesh.org) after accepting an invite
+   - Tap **Test** to verify, then **Save**
 
-3. **View Your Coverage**: As you move:
+3. **Start Tracking**: Tap the green play button (bottom right)
+   - The button will turn red when tracking is active
+   - Your position will update automatically
+
+4. **View Your Coverage**: As you move:
    - GPS samples are collected automatically
    - Coverage areas appear as colored rectangles
    - Colors indicate signal quality (default) or data age
@@ -105,13 +106,7 @@ Exported JSON contains an array of samples:
 
 ## Development
 
-To make changes:
-
 1. Edit source files in `lib/`
 2. Run `flutter pub get` if you add dependencies
 3. Test with `flutter run`
-4. Build release with `flutter build apk --release`
-
-## Credits
-
-Originally inspired by mesh-map.pages.dev by Kyle Reed for MeshCore network coverage mapping.
+4. Build with `./build_and_install.sh`
