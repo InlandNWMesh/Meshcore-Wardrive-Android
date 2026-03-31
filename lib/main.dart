@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/map_screen.dart';
+import 'services/upload_service.dart';
+import 'screens/dialogs/show_upload_settings_dialog.dart';
 
 void main() {
   // Lock to portrait mode (true north)
@@ -26,7 +28,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
-  
+
   ThemeMode get themeMode => _themeMode;
 
   @override
@@ -75,7 +77,62 @@ class _MyAppState extends State<MyApp> {
         scaffoldBackgroundColor: const Color(0xFF121212),
         cardColor: const Color(0xFF1E1E1E),
       ),
-      home: const MapScreen(),
+      home: const StartupGate(),
+    );
+  }
+}
+
+/// Checks contributor token validity before showing the map.
+///
+/// Shows a loading indicator while validating, forces the token setup dialog
+/// if the token is missing or rejected, then navigates to [MapScreen].
+/// Network errors are treated as offline (map loads without blocking).
+class StartupGate extends StatefulWidget {
+  const StartupGate({super.key});
+
+  @override
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAndProceed();
+  }
+
+  Future<void> _checkAndProceed() async {
+    final uploadService = UploadService();
+    final token = await uploadService.getContributorToken();
+    final url = await uploadService.getApiUrl();
+
+    if (!mounted) return;
+
+    if (token.isEmpty) {
+      // No token — must set one before the map loads.
+      await showUploadSettingsDialog(context, uploadService, required: true);
+    } else {
+      final error = await uploadService.validateToken(url, token);
+      if (!mounted) return;
+
+      if (error != null && error != 'Could not reach server') {
+        // Server explicitly rejected the token — force re-entry.
+        await showUploadSettingsDialog(context, uploadService, required: true);
+      }
+      // null (valid) or 'Could not reach server' (offline) → proceed normally.
+    }
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const MapScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
