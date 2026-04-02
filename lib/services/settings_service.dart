@@ -10,6 +10,10 @@ class SettingsService {
   static const String _pingIntervalKey = 'ping_interval_meters';
   static const String _coveragePrecisionKey = 'coverage_precision';
   static const String _ignoredRepeaterPrefixKey = 'ignored_repeater_prefix';
+  static const String _geofenceNorthKey = 'geofence_north';
+  static const String _geofenceSouthKey = 'geofence_south';
+  static const String _geofenceEastKey  = 'geofence_east';
+  static const String _geofenceWestKey  = 'geofence_west';
   static const String _includeOnlyRepeatersKey = 'include_only_repeaters';
   
   Future<bool> getShowSamples() async {
@@ -120,5 +124,34 @@ class SettingsService {
     } else {
       await prefs.setString(_includeOnlyRepeatersKey, value);
     }
+  }
+
+  /// Returns the user collection geofence as {north, south, east, west}, or null if not set.
+  Future<Map<String, double>?> getGeofence() async {
+    final prefs = await SharedPreferences.getInstance();
+    final north = prefs.getDouble(_geofenceNorthKey);
+    if (north == null) return null;
+    return {
+      'north': north,
+      'south': prefs.getDouble(_geofenceSouthKey)!,
+      'east':  prefs.getDouble(_geofenceEastKey)!,
+      'west':  prefs.getDouble(_geofenceWestKey)!,
+    };
+  }
+
+  Future<void> setGeofence(double north, double south, double east, double west) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_geofenceNorthKey, north);
+    await prefs.setDouble(_geofenceSouthKey, south);
+    await prefs.setDouble(_geofenceEastKey,  east);
+    await prefs.setDouble(_geofenceWestKey,  west);
+  }
+
+  Future<void> clearGeofence() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_geofenceNorthKey);
+    await prefs.remove(_geofenceSouthKey);
+    await prefs.remove(_geofenceEastKey);
+    await prefs.remove(_geofenceWestKey);
   }
 }

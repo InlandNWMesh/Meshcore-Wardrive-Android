@@ -21,8 +21,23 @@ class LocationService {
   bool _autoPingEnabled = false;
   double _pingIntervalMeters = 805.0; // Default 0.5 miles
   LatLng? _lastPingPosition;
+
+  // User collection geofence — null means no fence active
+  Map<String, double>? _geofence; // keys: north, south, east, west
+  bool _outsideGeofence = false;
+  final _geofenceStatusController = StreamController<bool>.broadcast();
+
+  /// Whether the current position is outside the user's collection geofence.
+  bool get isOutsideGeofence => _outsideGeofence;
+  Stream<bool> get geofenceStatusStream => _geofenceStatusController.stream;
+
+  void setGeofence(Map<String, double>? fence) {
+    _geofence = fence;
+  }
   
   // Stream for broadcasting current position
+  LatLng? _currentPosition;
+  LatLng? get currentPosition => _currentPosition;
   final _currentPositionController = StreamController<LatLng>.broadcast();
   Stream<LatLng> get currentPositionStream => _currentPositionController.stream;
   
@@ -232,6 +247,7 @@ class LocationService {
     await _logger.logLocationEvent('GPS update: ${latLng.latitude}, ${latLng.longitude}, accuracy: ${position.accuracy}m');
     
     // Broadcast current position to listeners
+    _currentPosition = latLng;
     _currentPositionController.add(latLng);
 
     // Validate location
@@ -246,6 +262,23 @@ class LocationService {
       position.longitude,
     );
 
+    // Update geofence status
+    if (_geofence != null) {
+      final outside = position.latitude  > _geofence!['north']! ||
+                      position.latitude  < _geofence!['south']! ||
+                      position.longitude > _geofence!['east']!  ||
+                      position.longitude < _geofence!['west']!;
+      if (outside != _outsideGeofence) {
+        _outsideGeofence = outside;
+        _geofenceStatusController.add(_outsideGeofence);
+      }
+    } else {
+      if (_outsideGeofence) {
+        _outsideGeofence = false;
+        _geofenceStatusController.add(false);
+      }
+    }
+
     // Check if we should trigger a ping (but don't wait for it)
     final isConnected = _loraCompanion.isDeviceConnected;
     
@@ -254,7 +287,7 @@ class LocationService {
       await _logger.logPingEvent('Checking ping condition: autoPing=$_autoPingEnabled, deviceConnected=$isConnected, lastPingPos=${_lastPingPosition != null ? "set" : "null"}');
     }
     
-    if (_autoPingEnabled && isConnected) {
+    if (_autoPingEnabled && isConnected && !_outsideGeofence) {
       bool shouldPing = false;
       
       if (_lastPingPosition == null) {
@@ -459,6 +492,7 @@ class LocationService {
     _currentPositionController.close();
     _sampleSavedController.close();
     _pingEventController.close();
+    _geofenceStatusController.close();
     _loraCompanion.dispose();
   }
 }

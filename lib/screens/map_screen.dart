@@ -33,6 +33,7 @@ import 'dialogs/show_upload_settings_dialog.dart';
 import 'map_settings_sheet.dart';
 import 'chat_screen.dart';
 import '../services/chat_service.dart';
+import 'geofence_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -57,6 +58,10 @@ class _MapScreenState extends State<MapScreen> {
   StreamSubscription<void>? _sampleSavedSubscription;
   StreamSubscription<String>? _pingEventSubscription;
   StreamSubscription<int?>? _batterySubscription;
+  StreamSubscription<bool>? _geofenceStatusSubscription;
+
+  bool _outsideGeofence = false;
+  Map<String, double>? _activeGeofence; // for map overlay
 
   @override
   void initState() {
@@ -101,6 +106,10 @@ class _MapScreenState extends State<MapScreen> {
       }
     });
     
+    _geofenceStatusSubscription = _locationService.geofenceStatusStream.listen((outside) {
+      if (mounted) setState(() => _outsideGeofence = outside);
+    });
+
     await _loadSamples();
     await _getCurrentLocation();
 
@@ -138,6 +147,11 @@ class _MapScreenState extends State<MapScreen> {
     // Apply to services
     _locationService.setPingInterval(pingInterval);
     _locationService.loraCompanion.setIgnoredRepeaterPrefix(ignoredPrefix);
+
+    // Load geofence
+    final fence = await _settingsService.getGeofence();
+    _locationService.setGeofence(fence);
+    if (mounted) setState(() => _activeGeofence = fence);
   }
 
   Future<void> _getCurrentLocation() async {
@@ -356,6 +370,7 @@ class _MapScreenState extends State<MapScreen> {
     _positionSubscription?.cancel();
     _sampleSavedSubscription?.cancel();
     _pingEventSubscription?.cancel();
+    _geofenceStatusSubscription?.cancel();
     _locationService.dispose();
     _notifier.dispose();
     super.dispose();
@@ -370,6 +385,28 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('MeshCore Wardrive'),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.crop_square,
+              color: _activeGeofence != null ? Colors.orange : null,
+            ),
+            tooltip: 'Collection Geofence',
+            onPressed: () async {
+              final changed = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GeofenceScreen(
+                    locationService: _locationService,
+                    settingsService: _settingsService,
+                  ),
+                ),
+              );
+              if (changed == true) {
+                final fence = await _settingsService.getGeofence();
+                setState(() => _activeGeofence = fence);
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Chat',
@@ -419,6 +456,33 @@ class _MapScreenState extends State<MapScreen> {
             onImport: _importData,
             onClearData: _clearData,
           ),
+          if (_outsideGeofence)
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.not_listed_location, color: Colors.white, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Outside geofence — logging paused',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       floatingActionButton: Column(
@@ -511,6 +575,21 @@ class _MapScreenState extends State<MapScreen> {
             _notifier.state.currentPosition!,
             _notifier.state.showPingPulse,
           ),
+        if (_activeGeofence != null)
+          PolygonLayer(polygons: [
+            Polygon(
+              points: [
+                LatLng(_activeGeofence!['north']!, _activeGeofence!['west']!),
+                LatLng(_activeGeofence!['north']!, _activeGeofence!['east']!),
+                LatLng(_activeGeofence!['south']!, _activeGeofence!['east']!),
+                LatLng(_activeGeofence!['south']!, _activeGeofence!['west']!),
+              ],
+              color: Colors.orange.withValues(alpha: 0.08),
+              borderColor: Colors.orange.withValues(alpha: 0.6),
+              borderStrokeWidth: 1.5,
+              isFilled: true,
+            ),
+          ]),
       ],
     );
   }
