@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../services/chat_service.dart';
+import 'channel_manager_screen.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final ChatService chatService;
 
   const ChatScreen({super.key, required this.chatService});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Query the radio for all channel configs when the chat screen opens.
+    widget.chatService.requestAllChannels();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +36,8 @@ class ChatScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _DirectTab(chatService: chatService),
-            _ChannelTab(chatService: chatService),
+            _DirectTab(chatService: widget.chatService),
+            _ChannelTab(chatService: widget.chatService),
           ],
         ),
       ),
@@ -54,7 +67,7 @@ class _DirectTab extends StatelessWidget {
 
         for (final conv in conversations) {
           final key = conv['conversation_key'] as String;
-          if (key.startsWith('ch_')) continue; // skip channel conversations
+          if (key.startsWith('ch_')) continue;
           seenKeys.add(key);
           items.add(_ContactItem(
             keyHex: key,
@@ -120,7 +133,7 @@ class _ContactItem {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Channel tab — public flood channel
+// Channel tab — channel selector + flood messages
 // ─────────────────────────────────────────────────────────────
 
 class _ChannelTab extends StatefulWidget {
@@ -132,21 +145,122 @@ class _ChannelTab extends StatefulWidget {
 }
 
 class _ChannelTabState extends State<_ChannelTab> {
+  int _selectedChannel = 0;
+  Map<int, Map<String, dynamic>> _channelInfo = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _channelInfo = Map.of(widget.chatService.channelInfo);
+    widget.chatService.channelInfoStream.listen((info) {
+      if (mounted) setState(() => _channelInfo = Map.of(info));
+    });
+  }
+
+  String _channelLabel(int idx) {
+    final info = _channelInfo[idx];
+    if (info != null) {
+      final name = info['name'] as String? ?? '';
+      if (name.isNotEmpty) return name;
+    }
+    return 'Ch $idx';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Channel selector bar
+        Container(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.cell_tower, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(4, (i) {
+                      final selected = i == _selectedChannel;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(_channelLabel(i)),
+                          selected: selected,
+                          onSelected: (_) =>
+                              setState(() => _selectedChannel = i),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings, size: 20),
+                tooltip: 'Manage channels',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChannelManagerScreen(
+                      chatService: widget.chatService,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Messages for selected channel
+        Expanded(
+          child: _ChannelMessageView(
+            key: ValueKey(_selectedChannel),
+            chatService: widget.chatService,
+            channelIndex: _selectedChannel,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Message view for a single channel — keyed so it rebuilds when channel changes.
+class _ChannelMessageView extends StatefulWidget {
+  final ChatService chatService;
+  final int channelIndex;
+
+  const _ChannelMessageView({
+    super.key,
+    required this.chatService,
+    required this.channelIndex,
+  });
+
+  @override
+  State<_ChannelMessageView> createState() => _ChannelMessageViewState();
+}
+
+class _ChannelMessageViewState extends State<_ChannelMessageView> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
-  static const int _channelIndex = 0;
+  Map<String, int> _heardCounts = {};
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
     widget.chatService.messageStream.listen(_onMessage);
+    widget.chatService.heardUpdateStream.listen(_onHeardUpdate);
+  }
+
+  void _onHeardUpdate(Map<String, int> counts) {
+    if (mounted) setState(() => _heardCounts = counts);
   }
 
   Future<void> _loadHistory() async {
     final history =
-        await widget.chatService.getMessages('ch_$_channelIndex');
+        await widget.chatService.getMessages('ch_${widget.channelIndex}');
     if (mounted) {
       setState(() => _messages.addAll(history));
       _scrollToBottom();
@@ -154,7 +268,7 @@ class _ChannelTabState extends State<_ChannelTab> {
   }
 
   void _onMessage(ChatMessage msg) {
-    if (!msg.isChannel || msg.channelIndex != _channelIndex) return;
+    if (!msg.isChannel || msg.channelIndex != widget.channelIndex) return;
     if (mounted) {
       setState(() => _messages.add(msg));
       _scrollToBottom();
@@ -177,7 +291,7 @@ class _ChannelTabState extends State<_ChannelTab> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
-    await widget.chatService.sendChannel(text, channelIndex: _channelIndex);
+    await widget.chatService.sendChannel(text, channelIndex: widget.channelIndex);
   }
 
   @override
@@ -198,8 +312,13 @@ class _ChannelTabState extends State<_ChannelTab> {
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: _messages.length,
-                  itemBuilder: (context, i) =>
-                      _MessageBubble(message: _messages[i]),
+                  itemBuilder: (context, i) {
+                    final msg = _messages[i];
+                    return _MessageBubble(
+                      message: msg,
+                      heardCount: _heardCounts[msg.id],
+                    );
+                  },
                 ),
         ),
         _ComposeBar(controller: _controller, onSend: _send),
@@ -313,7 +432,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
-  const _MessageBubble({required this.message});
+  final int? heardCount;
+  const _MessageBubble({required this.message, this.heardCount});
 
   @override
   Widget build(BuildContext context) {
@@ -335,11 +455,11 @@ class _MessageBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: align,
         children: [
-          if (message.isChannel && !isOutgoing && message.senderName != null)
+          if (message.isChannel && !isOutgoing)
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
               child: Text(
-                message.senderName!,
+                message.senderName ?? message.senderKeyHex,
                 style: theme.textTheme.labelSmall,
               ),
             ),
@@ -357,11 +477,29 @@ class _MessageBubble extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              timeStr,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeStr,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                if (isOutgoing && message.isChannel && (heardCount ?? 0) > 0) ...[
+                  const SizedBox(width: 6),
+                  Icon(Icons.cell_tower,
+                      size: 11,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                  const SizedBox(width: 2),
+                  Text(
+                    '$heardCount',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

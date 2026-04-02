@@ -63,6 +63,15 @@ class LoRaCompanionService {
   final _pingResultController = StreamController<PingResult>.broadcast();
   final _messageController = StreamController<ChatMessage>.broadcast();
   bool _syncingMessages = false;
+
+  // Channel info cache: slot index (0-3) → {index, name, key}
+  final Map<int, Map<String, dynamic>> _channelInfo = {};
+  final _channelInfoController =
+      StreamController<Map<int, Map<String, dynamic>>>.broadcast();
+
+  // Echo tracking: emits {channelIdx, text} when a repeater re-broadcasts our message
+  final _echoController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _pendingPings = <int, Completer<PingResult>>{}; // tag -> completer
   final Map<int, List<Map<String, dynamic>>> _pingResponses =
       {}; // tag -> list of responses
@@ -111,6 +120,11 @@ class LoRaCompanionService {
   int? get batteryPercent => _batteryPercent;
   Stream<int?> get batteryStream => _batteryController.stream;
   Stream<ChatMessage> get messageStream => _messageController.stream;
+  Map<int, Map<String, dynamic>> get channelInfo =>
+      Map.unmodifiable(_channelInfo);
+  Stream<Map<int, Map<String, dynamic>>> get channelInfoStream =>
+      _channelInfoController.stream;
+  Stream<Map<String, dynamic>> get echoStream => _echoController.stream;
 
   /// Set repeater prefix to ignore (e.g., your mobile repeater)
   void setIgnoredRepeaterPrefix(String? prefix) {
@@ -846,6 +860,9 @@ class LoRaCompanionService {
         );
         _handleControlDataPush(frame.data);
         break;
+      case RESP_CODE_CHANNEL_INFO: // 18 — channel config response
+        _handleChannelInfoResponse(frame.data);
+        break;
       case PUSH_CODE_MSG_WAITING: // 0x83 — device has queued messages
         _debugLog.logInfo('💬 MSG_WAITING: fetching queued message');
         _syncNextMessage();
@@ -865,6 +882,9 @@ class LoRaCompanionService {
         break;
       case PUSH_CODE_CHANNEL_MSG_RECV: // 0x85 — real-time channel message
         _handleChannelMessageRecv(frame.data);
+        break;
+      case PUSH_CODE_CHANNEL_ECHO: // 0x88 — repeater re-broadcast of our message
+        _handleChannelEcho(frame.data);
         break;
       default:
         // Log other frame types for debugging
@@ -1414,6 +1434,48 @@ class LoRaCompanionService {
   }
 
   // ──────────────────────────────────────────────
+  // Channel info
+  // ──────────────────────────────────────────────
+
+  void _handleChannelInfoResponse(Uint8List data) {
+    final info = _protocol.parseChannelInfoFrame(data);
+    if (info == null) {
+      _debugLog.logError('Failed to parse channel info frame');
+      return;
+    }
+    final idx = info['index'] as int;
+    _channelInfo[idx] = info;
+    _debugLog.logInfo(
+        '📡 Channel $idx: "${info['name']}"');
+    _channelInfoController.add(Map.unmodifiable(_channelInfo));
+  }
+
+  /// Write a channel name + key to the radio for the given slot index.
+  Future<void> setChannel(int slotIdx, String name, Uint8List key) async {
+    final payload = _protocol.createSetChannelPayload(slotIdx, name, key);
+    final cmd = _createCommandForDevice(CMD_SET_CHANNEL_CONFIG, payload);
+    await _sendBinaryToDevice(cmd);
+    _debugLog.logInfo('📡 Set channel $slotIdx: "$name"');
+    // Refresh local cache
+    await Future.delayed(const Duration(milliseconds: 200));
+    await requestAllChannels();
+  }
+
+  /// Query the radio for channel info on all 4 slots (0–3).
+  Future<void> requestAllChannels() async {
+    for (int i = 0; i < 4; i++) {
+      try {
+        final payload = _protocol.createGetChannelPayload(i);
+        final cmd = _createCommandForDevice(CMD_GET_CHANNEL, payload);
+        await _sendBinaryToDevice(cmd);
+        await Future.delayed(const Duration(milliseconds: 100));
+      } catch (e) {
+        _debugLog.logError('Failed to request channel $i info: $e');
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────
   // Chat message handlers
   // ──────────────────────────────────────────────
 
@@ -1462,6 +1524,18 @@ class LoRaCompanionService {
     );
     _debugLog.logInfo('💬 Channel[$channelIdx] from $sender: "$text"');
     _messageController.add(msg);
+  }
+
+  void _handleChannelEcho(Uint8List data) {
+    final parsed = _protocol.parseChannelMessageFrame(data, isEcho: true);
+    if (parsed == null) {
+      _debugLog.logError('📡 Failed to parse channel echo frame');
+      return;
+    }
+    final channelIdx = parsed['channelIdx'] as int? ?? 0;
+    final text = parsed['text'] as String? ?? '';
+    _debugLog.logInfo('📡 Channel[$channelIdx] echo: "$text"');
+    _echoController.add({'channelIdx': channelIdx, 'text': text});
   }
 
   Future<void> _syncNextMessage() async {
@@ -1520,5 +1594,6 @@ class LoRaCompanionService {
     _pingResultController.close();
     _batteryController.close();
     _messageController.close();
+    _channelInfoController.close();
   }
 }
