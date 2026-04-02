@@ -7,9 +7,10 @@ import 'dart:io';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'meshcore_wardrive.db';
-  static const int _databaseVersion = 4;
+  static const int _databaseVersion = 5;
 
   static const String tableSamples = 'samples';
+  static const String tableMessages = 'messages';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -55,6 +56,27 @@ class DatabaseService {
     await db.execute('''
       CREATE INDEX idx_samples_timestamp ON $tableSamples (timestamp)
     ''');
+
+    await _createMessagesTable(db);
+  }
+
+  Future<void> _createMessagesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableMessages (
+        id TEXT PRIMARY KEY,
+        conversation_key TEXT NOT NULL,
+        sender_key_hex TEXT NOT NULL,
+        sender_name TEXT,
+        text TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        is_outgoing INTEGER NOT NULL DEFAULT 0,
+        is_channel INTEGER NOT NULL DEFAULT 0,
+        channel_index INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_messages_conversation ON $tableMessages (conversation_key, timestamp)
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -71,6 +93,9 @@ class DatabaseService {
     if (oldVersion < 4) {
       // Add uploaded tracking column
       await db.execute('ALTER TABLE $tableSamples ADD COLUMN uploaded INTEGER DEFAULT 0');
+    }
+    if (oldVersion < 5) {
+      await _createMessagesTable(db);
     }
   }
 
@@ -246,6 +271,44 @@ class DatabaseService {
     }
     
     return importedCount;
+  }
+
+  /// Insert or replace a chat message
+  Future<void> insertMessage(ChatMessage msg) async {
+    final db = await database;
+    await db.insert(
+      tableMessages,
+      msg.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Get messages for a conversation, oldest first
+  Future<List<ChatMessage>> getMessages(String conversationKey,
+      {int limit = 100}) async {
+    final db = await database;
+    final maps = await db.query(
+      tableMessages,
+      where: 'conversation_key = ?',
+      whereArgs: [conversationKey],
+      orderBy: 'timestamp ASC',
+      limit: limit,
+    );
+    return maps.map(ChatMessage.fromMap).toList();
+  }
+
+  /// Get distinct conversations ordered by latest message timestamp desc.
+  /// Returns list of maps with keys: conversation_key, latest_timestamp, sender_name.
+  Future<List<Map<String, dynamic>>> getConversations() async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT conversation_key,
+             MAX(timestamp) AS latest_timestamp,
+             sender_name
+      FROM $tableMessages
+      GROUP BY conversation_key
+      ORDER BY latest_timestamp DESC
+    ''');
   }
 
   /// Close the database

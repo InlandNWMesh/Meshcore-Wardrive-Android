@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import 'debug_log_service.dart';
 import 'meshcore_protocol.dart';
 import '../models/models.dart';
+import '../utils/buffer_utils.dart';
 
 enum ConnectionType { usb, bluetooth, none }
 
@@ -60,6 +61,8 @@ class LoRaCompanionService {
 
   // State
   final _pingResultController = StreamController<PingResult>.broadcast();
+  final _messageController = StreamController<ChatMessage>.broadcast();
+  bool _syncingMessages = false;
   final _pendingPings = <int, Completer<PingResult>>{}; // tag -> completer
   final Map<int, List<Map<String, dynamic>>> _pingResponses =
       {}; // tag -> list of responses
@@ -107,6 +110,7 @@ class LoRaCompanionService {
   Stream<PingResult> get pingResults => _pingResultController.stream;
   int? get batteryPercent => _batteryPercent;
   Stream<int?> get batteryStream => _batteryController.stream;
+  Stream<ChatMessage> get messageStream => _messageController.stream;
 
   /// Set repeater prefix to ignore (e.g., your mobile repeater)
   void setIgnoredRepeaterPrefix(String? prefix) {
@@ -842,6 +846,26 @@ class LoRaCompanionService {
         );
         _handleControlDataPush(frame.data);
         break;
+      case PUSH_CODE_MSG_WAITING: // 0x83 — device has queued messages
+        _debugLog.logInfo('💬 MSG_WAITING: fetching queued message');
+        _syncNextMessage();
+        break;
+      case RESP_CODE_NO_MORE_MESSAGES: // 10 — no more queued messages
+        _debugLog.logInfo('💬 No more queued messages');
+        _syncingMessages = false;
+        break;
+      case RESP_CODE_CONTACT_MSG_RECV: // 7 — incoming direct message
+        _handleDirectMessageRecv(frame.data);
+        _syncNextMessage(); // fetch next queued message
+        break;
+      case RESP_CODE_CHANNEL_MSG_RECV: // 8 — queued channel message
+      case RESP_CODE_CHANNEL_MSG_RECV_V3: // 17 — queued channel message (v3)
+        _handleChannelMessageRecv(frame.data);
+        _syncNextMessage();
+        break;
+      case PUSH_CODE_CHANNEL_MSG_RECV: // 0x85 — real-time channel message
+        _handleChannelMessageRecv(frame.data);
+        break;
       default:
         // Log other frame types for debugging
         _debugLog.logLoRa(
@@ -1389,9 +1413,112 @@ class LoRaCompanionService {
     // MQTT removed - no-op
   }
 
+  // ──────────────────────────────────────────────
+  // Chat message handlers
+  // ──────────────────────────────────────────────
+
+  void _handleDirectMessageRecv(Uint8List data) {
+    final parsed = _protocol.parseDirectMessageFrame(data);
+    if (parsed == null) {
+      _debugLog.logError('💬 Failed to parse direct message frame');
+      return;
+    }
+    final senderKeyHex = parsed['senderKeyHex'] as String;
+    final msg = ChatMessage(
+      id: '${parsed['timestamp']}_$senderKeyHex',
+      conversationKey: senderKeyHex,
+      senderKeyHex: senderKeyHex,
+      senderName: _resolveContactName(senderKeyHex),
+      text: parsed['text'] as String,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(
+          (parsed['timestamp'] as int) * 1000),
+      isOutgoing: false,
+      isChannel: false,
+    );
+    _debugLog.logInfo('💬 Direct message from $senderKeyHex: "${msg.text}"');
+    _messageController.add(msg);
+  }
+
+  void _handleChannelMessageRecv(Uint8List data) {
+    final parsed = _protocol.parseChannelMessageFrame(data);
+    if (parsed == null) {
+      _debugLog.logError('💬 Failed to parse channel message frame');
+      return;
+    }
+    final channelIdx = parsed['channelIdx'] as int? ?? 0;
+    final sender = parsed['sender'] as String? ?? 'unknown';
+    final text = parsed['text'] as String? ?? '';
+    final ts = DateTime.now();
+    final msg = ChatMessage(
+      id: '${ts.millisecondsSinceEpoch}_ch$channelIdx',
+      conversationKey: 'ch_$channelIdx',
+      senderKeyHex: sender.toLowerCase(),
+      senderName: _resolveContactName(sender.toLowerCase()),
+      text: text,
+      timestamp: ts,
+      isOutgoing: false,
+      isChannel: true,
+      channelIndex: channelIdx,
+    );
+    _debugLog.logInfo('💬 Channel[$channelIdx] from $sender: "$text"');
+    _messageController.add(msg);
+  }
+
+  Future<void> _syncNextMessage() async {
+    if (_syncingMessages) return;
+    _syncingMessages = true;
+    try {
+      final cmd = _createCommandForDevice(CMD_SYNC_NEXT_MESSAGE, Uint8List(0));
+      await _sendBinaryToDevice(cmd);
+    } catch (e) {
+      _syncingMessages = false;
+      _debugLog.logError('Failed to sync next message: $e');
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // Public chat send methods
+  // ──────────────────────────────────────────────
+
+  /// Send a direct text message to a contact identified by their key hex prefix.
+  Future<void> sendDirectMessage(String recipientKeyHex, String text) async {
+    final keyBytes = hexToBytes(recipientKeyHex);
+    final prefix6 = keyBytes.length >= 6
+        ? Uint8List.fromList(keyBytes.sublist(0, 6))
+        : keyBytes;
+    final payload = _protocol.createDirectMessagePayload(prefix6, text);
+    await _sendBinaryToDevice(_createCommandForDevice(CMD_SEND_MESSAGE, payload));
+  }
+
+  /// Send a channel text message on the given channel index (default 0).
+  Future<void> sendChannelMessage(String text, {int channelIndex = 0}) async {
+    final payload = _protocol.createChannelMessagePayload(channelIndex, text);
+    await _sendBinaryToDevice(
+        _createCommandForDevice(CMD_SEND_CHANNEL_MESSAGE, payload));
+  }
+
+  /// Resolve a key hex prefix to a contact name from the known repeaters cache.
+  String? _resolveContactName(String keyHex) {
+    final upper = keyHex.toUpperCase();
+    for (final r in _discoveredRepeaters) {
+      if (r.id.toUpperCase().startsWith(upper) ||
+          upper.startsWith(r.id.toUpperCase())) {
+        return r.name;
+      }
+    }
+    for (final r in _repeaterContactCache.values) {
+      if (r.id.toUpperCase().startsWith(upper) ||
+          upper.startsWith(r.id.toUpperCase())) {
+        return r.name;
+      }
+    }
+    return null;
+  }
+
   void dispose() {
     disconnectDevice();
     _pingResultController.close();
     _batteryController.close();
+    _messageController.close();
   }
 }

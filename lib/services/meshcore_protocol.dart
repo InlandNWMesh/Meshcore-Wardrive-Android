@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../utils/buffer_utils.dart';
 
 /// MeshCore Companion Radio Binary Protocol
 /// Protocol spec: https://github.com/meshcore-dev/MeshCore/wiki/Companion-Radio-Protocol
@@ -399,6 +400,45 @@ class MeshCoreProtocol {
     payload.addByte((lonInt >> 24) & 0xFF);
     
     return payload.toBytes();
+  }
+
+  /// Create CMD_SEND_MESSAGE payload for a direct message.
+  /// Adapted from meshcore-open (github.com/zjs81/meshcore-open, MIT).
+  /// Frame: [txtType=0 1B][attempt=0 1B][timestamp 4B LE][recipientKeyPrefix 6B][text\0]
+  Uint8List createDirectMessagePayload(Uint8List recipientKeyPrefix6, String text) {
+    final w = BufferWriter();
+    w.writeByte(0); // txtType = plain text
+    w.writeByte(0); // attempt = 0
+    w.writeUInt32LE((DateTime.now().millisecondsSinceEpoch / 1000).floor());
+    w.writeBytes(recipientKeyPrefix6);
+    w.writeCString(text);
+    return w.toBytes();
+  }
+
+  /// Parse RESP_CODE_CONTACT_MSG_RECV (7) frame.
+  /// Frame: [senderKey 6B][pathLen 1B][txtType 1B][timestamp 4B LE][text\0]
+  /// Returns {senderKeyHex, text, timestamp} or null on parse failure.
+  Map<String, dynamic>? parseDirectMessageFrame(Uint8List data) {
+    try {
+      if (data.length < 13) return null; // 6 + 1 + 1 + 4 + at least 1 char + null
+      final r = BufferReader(data);
+      final senderKeyBytes = r.readBytes(6);
+      final senderKeyHex = senderKeyBytes
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join('');
+      r.skipBytes(1); // pathLen
+      r.skipBytes(1); // txtType
+      final timestamp = r.readUInt32LE();
+      final text = r.readCString();
+      return {
+        'senderKeyHex': senderKeyHex,
+        'text': text,
+        'timestamp': timestamp,
+      };
+    } catch (e) {
+      print('Error parsing direct message frame: $e');
+      return null;
+    }
   }
 
   /// Create CMD_SEND_CHANNEL_MESSAGE payload
