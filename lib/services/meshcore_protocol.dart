@@ -47,7 +47,6 @@ const int PUSH_CODE_CONTACT_UPDATED = 0x82;
 const int PUSH_CODE_MSG_WAITING = 0x83;
 const int PUSH_CODE_ACK_RECV = 0x84;
 const int PUSH_CODE_CHANNEL_MSG_RECV = 0x85;
-const int PUSH_CODE_CHANNEL_ECHO = 0x88;  // Channel message echo/repeat (136 decimal)
 const int PUSH_CODE_CONTROL_DATA = 0x8E;  // Control data packet received (142 decimal)
 
 // Advertisement types

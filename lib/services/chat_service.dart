@@ -5,24 +5,14 @@ import 'database_service.dart';
 import 'lora_companion_service.dart';
 
 /// Orchestration layer between the LoRa radio service, SQLite, and the chat UI.
-/// Exposes a unified [messageStream] that emits both incoming and outgoing messages,
-/// and a [heardUpdateStream] that fires when a repeater echoes one of our outgoing
-/// channel messages.
+/// Exposes a unified [messageStream] that emits both incoming and outgoing messages.
 class ChatService {
   final LoRaCompanionService _lora;
   final DatabaseService _db = DatabaseService();
   final _streamController = StreamController<ChatMessage>.broadcast();
 
-  // Echo tracking: message id → heard count
-  final Map<String, int> _heardCounts = {};
-  // text → list of message ids that sent this text (outgoing channel only)
-  final Map<String, List<String>> _outgoingByText = {};
-  final _heardController =
-      StreamController<Map<String, int>>.broadcast();
-
   ChatService(this._lora) {
     _lora.messageStream.listen(_onIncoming);
-    _lora.echoStream.listen(_onEcho);
   }
 
   Future<void> _onIncoming(ChatMessage msg) async {
@@ -30,25 +20,8 @@ class ChatService {
     _streamController.add(msg);
   }
 
-  void _onEcho(Map<String, dynamic> echo) {
-    final text = echo['text'] as String? ?? '';
-    final ids = _outgoingByText[text];
-    if (ids == null || ids.isEmpty) return;
-    // Increment heard count for every outgoing message with this text
-    for (final id in ids) {
-      _heardCounts[id] = (_heardCounts[id] ?? 0) + 1;
-    }
-    _heardController.add(Map.unmodifiable(_heardCounts));
-  }
-
   /// Unified stream of all messages (incoming + outgoing).
   Stream<ChatMessage> get messageStream => _streamController.stream;
-
-  /// Fires whenever a heard-repeats count changes. Emits the full id→count map.
-  Stream<Map<String, int>> get heardUpdateStream => _heardController.stream;
-
-  /// Current heard-repeat counts by message id.
-  Map<String, int> get heardCounts => Map.unmodifiable(_heardCounts);
 
   Future<List<ChatMessage>> getMessages(String conversationKey) =>
       _db.getMessages(conversationKey);
@@ -103,12 +76,9 @@ class ChatService {
     );
     await _db.insertMessage(msg);
     _streamController.add(msg);
-    // Register for echo correlation
-    _outgoingByText.putIfAbsent(text, () => []).add(msg.id);
   }
 
   void dispose() {
     _streamController.close();
-    _heardController.close();
   }
 }

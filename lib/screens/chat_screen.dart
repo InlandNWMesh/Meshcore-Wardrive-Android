@@ -244,18 +244,12 @@ class _ChannelMessageViewState extends State<_ChannelMessageView> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
-  Map<String, int> _heardCounts = {};
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
     widget.chatService.messageStream.listen(_onMessage);
-    widget.chatService.heardUpdateStream.listen(_onHeardUpdate);
-  }
-
-  void _onHeardUpdate(Map<String, int> counts) {
-    if (mounted) setState(() => _heardCounts = counts);
   }
 
   Future<void> _loadHistory() async {
@@ -312,13 +306,8 @@ class _ChannelMessageViewState extends State<_ChannelMessageView> {
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: _messages.length,
-                  itemBuilder: (context, i) {
-                    final msg = _messages[i];
-                    return _MessageBubble(
-                      message: msg,
-                      heardCount: _heardCounts[msg.id],
-                    );
-                  },
+                  itemBuilder: (context, i) =>
+                      _MessageBubble(message: _messages[i]),
                 ),
         ),
         _ComposeBar(controller: _controller, onSend: _send),
@@ -432,8 +421,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
-  final int? heardCount;
-  const _MessageBubble({required this.message, this.heardCount});
+  const _MessageBubble({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -477,29 +465,11 @@ class _MessageBubble extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  timeStr,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-                if (isOutgoing && message.isChannel && (heardCount ?? 0) > 0) ...[
-                  const SizedBox(width: 6),
-                  Icon(Icons.cell_tower,
-                      size: 11,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                  const SizedBox(width: 2),
-                  Text(
-                    '$heardCount',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              timeStr,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ),
         ],

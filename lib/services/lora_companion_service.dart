@@ -69,9 +69,6 @@ class LoRaCompanionService {
   final _channelInfoController =
       StreamController<Map<int, Map<String, dynamic>>>.broadcast();
 
-  // Echo tracking: emits {channelIdx, text} when a repeater re-broadcasts our message
-  final _echoController =
-      StreamController<Map<String, dynamic>>.broadcast();
   final _pendingPings = <int, Completer<PingResult>>{}; // tag -> completer
   final Map<int, List<Map<String, dynamic>>> _pingResponses =
       {}; // tag -> list of responses
@@ -124,8 +121,6 @@ class LoRaCompanionService {
       Map.unmodifiable(_channelInfo);
   Stream<Map<int, Map<String, dynamic>>> get channelInfoStream =>
       _channelInfoController.stream;
-  Stream<Map<String, dynamic>> get echoStream => _echoController.stream;
-
   /// Set repeater prefix to ignore (e.g., your mobile repeater)
   void setIgnoredRepeaterPrefix(String? prefix) {
     _ignoredRepeaterPrefix = prefix;
@@ -878,13 +873,14 @@ class LoRaCompanionService {
       case RESP_CODE_CHANNEL_MSG_RECV: // 8 — queued channel message
       case RESP_CODE_CHANNEL_MSG_RECV_V3: // 17 — queued channel message (v3)
         _handleChannelMessageRecv(frame.data);
+        _syncingMessages = false; // reset so next fetch can proceed
         _syncNextMessage();
         break;
-      case PUSH_CODE_CHANNEL_MSG_RECV: // 0x85 — real-time channel message
+      case PUSH_CODE_CHANNEL_MSG_RECV: // 0x85 — real-time channel message push
         _handleChannelMessageRecv(frame.data);
         break;
-      case PUSH_CODE_CHANNEL_ECHO: // 0x88 — repeater re-broadcast of our message
-        _handleChannelEcho(frame.data);
+      case 0x88: // LOG_RX_DATA — raw radio receive log, used for wardrive sniffing
+        _debugLog.logLoRa('📻 Raw RX log frame (0x88), len=${frame.data.length}');
         break;
       default:
         // Log other frame types for debugging
@@ -1524,18 +1520,6 @@ class LoRaCompanionService {
     );
     _debugLog.logInfo('💬 Channel[$channelIdx] from $sender: "$text"');
     _messageController.add(msg);
-  }
-
-  void _handleChannelEcho(Uint8List data) {
-    final parsed = _protocol.parseChannelMessageFrame(data, isEcho: true);
-    if (parsed == null) {
-      _debugLog.logError('📡 Failed to parse channel echo frame');
-      return;
-    }
-    final channelIdx = parsed['channelIdx'] as int? ?? 0;
-    final text = parsed['text'] as String? ?? '';
-    _debugLog.logInfo('📡 Channel[$channelIdx] echo: "$text"');
-    _echoController.add({'channelIdx': channelIdx, 'text': text});
   }
 
   Future<void> _syncNextMessage() async {
