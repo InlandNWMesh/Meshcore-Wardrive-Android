@@ -31,6 +31,8 @@ import 'dialogs/show_repeater_info_dialog.dart';
 import 'dialogs/show_repeaters_dialog.dart';
 import 'dialogs/show_upload_settings_dialog.dart';
 import 'map_settings_sheet.dart';
+import 'chat_screen.dart';
+import '../services/chat_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -46,6 +48,7 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   final UploadService _uploadService = UploadService();
   final SettingsService _settingsService = SettingsService();
+  late ChatService _chatService;
 
   late MapStateNotifier _notifier;
 
@@ -59,6 +62,7 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _notifier = MapStateNotifier();
+    _chatService = ChatService(_locationService.loraCompanion);
     _initialize();
   }
 
@@ -366,6 +370,16 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('MeshCore Wardrive'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Chat',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(chatService: _chatService),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.terminal),
             onPressed: () {

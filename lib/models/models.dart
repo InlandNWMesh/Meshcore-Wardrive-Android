@@ -202,3 +202,53 @@ class NodeData {
   }
 }
 
+class ChatMessage {
+  final String id;               // '${timestampSec}_${senderKeyHex}'
+  final String conversationKey;  // senderKeyHex (direct) OR 'ch_$idx' (channel)
+  final String senderKeyHex;     // 6-byte sender pubkey prefix as hex, or 'me'
+  final String? senderName;      // resolved from contacts, nullable
+  final String text;
+  final DateTime timestamp;
+  final bool isOutgoing;
+  final bool isChannel;
+  final int? channelIndex;       // only for channel messages
+
+  const ChatMessage({
+    required this.id,
+    required this.conversationKey,
+    required this.senderKeyHex,
+    this.senderName,
+    required this.text,
+    required this.timestamp,
+    required this.isOutgoing,
+    required this.isChannel,
+    this.channelIndex,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'conversation_key': conversationKey,
+        'sender_key_hex': senderKeyHex,
+        'sender_name': senderName,
+        'text': text,
+        'timestamp': timestamp.millisecondsSinceEpoch ~/ 1000,
+        'is_outgoing': isOutgoing ? 1 : 0,
+        'is_channel': isChannel ? 1 : 0,
+        'channel_index': channelIndex,
+      };
+
+  factory ChatMessage.fromMap(Map<String, dynamic> map) {
+    return ChatMessage(
+      id: map['id'] as String,
+      conversationKey: map['conversation_key'] as String,
+      senderKeyHex: map['sender_key_hex'] as String,
+      senderName: map['sender_name'] as String?,
+      text: map['text'] as String,
+      timestamp: DateTime.fromMillisecondsSinceEpoch((map['timestamp'] as int) * 1000),
+      isOutgoing: (map['is_outgoing'] as int) == 1,
+      isChannel: (map['is_channel'] as int) == 1,
+      channelIndex: map['channel_index'] as int?,
+    );
+  }
+}
+
