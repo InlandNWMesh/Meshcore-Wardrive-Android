@@ -6,7 +6,7 @@ A Flutter-based Android application for mapping MeshCore mesh network coverage i
 
 ## 🚀 Quick Start
 
-1. **Download the APK** from the releases folder
+1. **Download the APK** from the [GitHub Releases page](https://github.com/george-viaud/Meshcore-Wardrive-Android/releases)
 2. **Enable "Install from Unknown Sources"** in your Android settings
 3. **Install the APK** on your device
 4. **Connect your LoRa device** via USB or Bluetooth
@@ -26,6 +26,8 @@ A Flutter-based Android application for mapping MeshCore mesh network coverage i
   - 🟠 **Orange (10-30%)**: Rarely works
   - 🔴 **Red (<10%)**: Dead zone
 - **Repeater Discovery** - See which repeaters are in range
+- **Geofence** - Define a rectangular collection area to limit data gathering to a specific region
+- **Chat** - Direct and channel messaging over MeshCore
 - **Data Export** - Save and share your wardrive data
 - **Web Map Upload** - Contribute to community coverage map
 
@@ -161,7 +163,7 @@ For issues and questions:
 
 ---
 
-**Current Version:** 1.0.25
+**Current Version:** 1.0.31
 
 **Minimum Android Version:** Android 5.0 (API 21)
 
