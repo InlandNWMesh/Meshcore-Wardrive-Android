@@ -91,11 +91,33 @@ Ed25519 key pairs stored in `FlutterSecureStorage`. Username format: `v1_{PUBLIC
 
 Requires Android foreground service (`flutter_foreground_task`) with persistent notification. Users must disable battery optimization for the app to sustain background GPS.
 
+### State Management
+
+`MapStateNotifier` (`lib/state/map_state_notifier.dart`) is a `ValueNotifier<MapState>` that holds all map-related runtime state: tracking on/off, sample list, aggregation result, LoRa connection status, battery, follow-location, and rotation lock. `MapScreen` listens to it via `ValueListenableBuilder`. Map display options (color mode, precision, filter) live in `MapDisplaySettings` (`lib/models/map_display_settings.dart`).
+
+### Screen & Widget Structure
+
+- `lib/screens/map_screen.dart` — main screen; owns all services and the `MapStateNotifier`
+- `lib/widgets/map_layers.dart` — renders coverage squares, edges, repeater markers, and ping pulse on the map
+- `lib/widgets/map_control_panel.dart` — floating HUD buttons (track, ping, follow, north-lock)
+- `lib/screens/map_settings_sheet.dart` — bottom sheet for display/filter settings
+- `lib/screens/geofence_screen.dart` — drag-corner rectangle geofence editor (bounding box stored via `SettingsService.getGeofence()`/`saveGeofence()`)
+- `lib/screens/channel_manager_screen.dart` — MeshCore channel configuration
+- `lib/screens/chat_screen.dart` — in-app chat over MeshCore; backed by `ChatService`
+- `lib/screens/debug_log_screen.dart` / `debug_diagnostics_screen.dart` — dev/debug tooling
+
+### Chat & Diagnostics
+
+- `ChatService` (`lib/services/chat_service.dart`) — sends/receives MeshCore chat messages; separate from the ping flow
+- `PersistentDebugLogger` (`lib/services/persistent_debug_logger.dart`) + `DebugLogService` — write structured debug logs to disk; accessible from `DebugLogScreen`
+
 ## Important Files for Common Tasks
 
 - Adding a new ping command: `lib/services/meshcore_protocol.dart` (protocol codes) + `lib/services/lora_companion_service.dart` (send/receive logic)
 - Changing coverage colors or scoring: `lib/services/aggregation_service.dart`
-- Map UI changes: `lib/screens/map_screen.dart`
+- Map UI changes: `lib/screens/map_screen.dart`, `lib/widgets/map_layers.dart`
+- Map runtime state: `lib/state/map_state_notifier.dart`
 - New settings: `lib/services/settings_service.dart` + `SharedPreferences` key
+- Geofence logic: `lib/screens/geofence_screen.dart` + `lib/services/settings_service.dart` (`getGeofence`/`saveGeofence`)
 - Database schema changes: `lib/services/database_service.dart` — increment version and add migration
 - App version: `lib/constants/app_version.dart` + `pubspec.yaml`

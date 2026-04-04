@@ -30,7 +30,7 @@ class _GeofenceScreenState extends State<GeofenceScreen> {
   // Which corner is being dragged: 0=NW 1=NE 2=SE 3=SW, -1=none
   int _draggingCorner = -1;
 
-  static const double _handleRadius = 20.0; // touch target radius in pixels
+  static const double _handleRadius = 24.0; // touch target radius in pixels
 
   @override
   void initState() {
@@ -123,38 +123,11 @@ class _GeofenceScreenState extends State<GeofenceScreen> {
         ]
       : [null, null, null, null];
 
-  int _nearestCorner(Offset localPos) {
-    int best = -1;
-    double bestDist = _handleRadius * 2;
-    final offsets = _cornerOffsets;
-    for (int i = 0; i < 4; i++) {
-      if (offsets[i] == null) continue;
-      final d = (offsets[i]! - localPos).distance;
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    return best;
-  }
-
-  void _handlePanStart(DragStartDetails details) {
-    if (!_hasFence) return;
-    final box = _mapKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return;
-    final localPos = box.globalToLocal(details.globalPosition);
-    final corner = _nearestCorner(localPos);
-    if (corner != -1) {
-      setState(() => _draggingCorner = corner);
-    }
-  }
-
-  void _handlePanUpdate(DragUpdateDetails details) {
-    if (_draggingCorner == -1) return;
-    final latLng = _globalToLatLng(details.globalPosition);
+  void _onCornerDrag(int corner, Offset globalPos) {
+    final latLng = _globalToLatLng(globalPos);
     if (latLng == null) return;
     setState(() {
-      switch (_draggingCorner) {
+      switch (corner) {
         case 0: _north = latLng.latitude; _west = latLng.longitude; break; // NW
         case 1: _north = latLng.latitude; _east = latLng.longitude; break; // NE
         case 2: _south = latLng.latitude; _east = latLng.longitude; break; // SE
@@ -164,10 +137,6 @@ class _GeofenceScreenState extends State<GeofenceScreen> {
       if (_north! < _south!) { final t = _north!; _north = _south; _south = t; }
       if (_east!  < _west!)  { final t = _east!;  _east  = _west;  _west  = t; }
     });
-  }
-
-  void _handlePanEnd(DragEndDetails _) {
-    setState(() => _draggingCorner = -1);
   }
 
   @override
@@ -196,47 +165,41 @@ class _GeofenceScreenState extends State<GeofenceScreen> {
       body: Stack(
         children: [
           // ── Map ────────────────────────────────────────────────
-          GestureDetector(
-            onPanStart: _handlePanStart,
-            onPanUpdate: _handlePanUpdate,
-            onPanEnd: _handlePanEnd,
-            // Only block map panning when actively dragging a corner
-            behavior: HitTestBehavior.translucent,
-            child: FlutterMap(
-              key: _mapKey,
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: 14,
-                interactionOptions: InteractionOptions(
-                  flags: _draggingCorner == -1
-                      ? InteractiveFlag.all
-                      : InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom,
-                ),
-                onMapEvent: (_) => setState(() {}),
+          FlutterMap(
+            key: _mapKey,
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: center,
+              initialZoom: 14,
+              interactionOptions: InteractionOptions(
+                // Disable map panning while a corner handle is being dragged
+                flags: _draggingCorner == -1
+                    ? InteractiveFlag.all
+                    : InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'org.inwmesh.wardrive',
-                ),
-                if (_hasFence)
-                  PolygonLayer(polygons: [
-                    Polygon(
-                      points: [
-                        LatLng(_north!, _west!),
-                        LatLng(_north!, _east!),
-                        LatLng(_south!, _east!),
-                        LatLng(_south!, _west!),
-                      ],
-                      color: Colors.orange.withValues(alpha: 0.15),
-                      borderColor: Colors.orange,
-                      borderStrokeWidth: 2,
-                      isFilled: true,
-                    ),
-                  ]),
-              ],
+              onMapEvent: (_) => setState(() {}),
             ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'org.inwmesh.wardrive',
+              ),
+              if (_hasFence)
+                PolygonLayer(polygons: [
+                  Polygon(
+                    points: [
+                      LatLng(_north!, _west!),
+                      LatLng(_north!, _east!),
+                      LatLng(_south!, _east!),
+                      LatLng(_south!, _west!),
+                    ],
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderColor: Colors.orange,
+                    borderStrokeWidth: 2,
+                    isFilled: true,
+                  ),
+                ]),
+            ],
           ),
 
           // ── Corner handles (rendered in Stack above map) ────────
@@ -250,7 +213,12 @@ class _GeofenceScreenState extends State<GeofenceScreen> {
                 top:  off.dy - _handleRadius,
                 width:  _handleRadius * 2,
                 height: _handleRadius * 2,
-                child: IgnorePointer(
+                // opaque absorbs the touch so the map below never sees it
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (_) => setState(() => _draggingCorner = i),
+                  onPanUpdate: (d) => _onCornerDrag(i, d.globalPosition),
+                  onPanEnd: (_) => setState(() => _draggingCorner = -1),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),
                     decoration: BoxDecoration(
