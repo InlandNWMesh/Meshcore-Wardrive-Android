@@ -12,6 +12,8 @@ class AggregationService {
     final Map<String, Coverage> hashToCoverage = {};
     final Map<String, Map<String, dynamic>> idToRepeaters = {};
     final List<Edge> edgeList = [];
+    // Latest response timestamp keyed by "$coverageHash|$repeaterId"
+    final Map<String, DateTime> edgeLatestTimestamp = {};
 
     // Build repeaters map
     for (final repeater in repeaters) {
@@ -110,6 +112,12 @@ class AggregationService {
             if (!coverage.repeaters.contains(sample.path!)) {
               coverage.repeaters.add(sample.path!);
             }
+            // Record latest response time for this (coverage, repeater) pair
+            final edgeKey = '${coverageHash}|${sample.path}';
+            final existing = edgeLatestTimestamp[edgeKey];
+            if (existing == null || sample.timestamp.isAfter(existing)) {
+              edgeLatestTimestamp[edgeKey] = sample.timestamp;
+            }
           }
           
           // Update lastReceived only if not contradicted
@@ -131,13 +139,13 @@ class AggregationService {
 
     // Build edges from coverage to repeaters that actually responded
     for (final coverage in hashToCoverage.values) {
-      // Only create edges for repeaters that actually responded in this coverage area
       for (final repeaterId in coverage.repeaters) {
         final repeaterData = idToRepeaters[repeaterId];
         if (repeaterData != null) {
           edgeList.add(Edge(
             coverage: coverage,
             repeater: repeaterData['repeater'] as Repeater,
+            timestamp: edgeLatestTimestamp['${coverage.id}|$repeaterId'],
           ));
         }
       }

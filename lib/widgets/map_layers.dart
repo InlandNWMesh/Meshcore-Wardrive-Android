@@ -102,8 +102,21 @@ Widget buildSampleLayer(
 
 // ── Edge layer ────────────────────────────────────────────────────────────────
 
-Widget buildEdgeLayer(AggregationResult result) {
-  final polylines = result.edges.map((edge) {
+Widget buildEdgeLayer(AggregationResult result, {int? maxEdgeResponses}) {
+  var edges = result.edges;
+
+  if (maxEdgeResponses != null && edges.length > maxEdgeResponses) {
+    // Keep only the N most-recently-active edges
+    final sorted = List<Edge>.from(edges)
+      ..sort((a, b) {
+        final aTime = a.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bTime = b.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bTime.compareTo(aTime); // newest first
+      });
+    edges = sorted.take(maxEdgeResponses).toList();
+  }
+
+  final polylines = edges.map((edge) {
     return Polyline(
       points: [edge.coverage.position, edge.repeater.position],
       color: Colors.purple.withValues(alpha: 0.6),

@@ -15,11 +15,17 @@ void showMapSettingsSheet(
   SettingsService settingsService,
   LocationService locationService, {
   required void Function(String) showSnackBar,
-  required Future<void> Function() onUploadSamples,
+  required Future<void> Function() onExportData,
+  required Future<void> Function() onImportData,
   required Future<void> Function() onConfigureUploadUrl,
   required Future<void> Function() onLoadSamples,
   required void Function() onScanForRepeaters,
   required void Function() onRefreshContacts,
+  required bool sonarPingEnabled,
+  required int sonarPingInterval,
+  required void Function(bool) onSonarEnabledChanged,
+  required void Function(int) onSonarIntervalChanged,
+  required Future<void> Function(int?) onMaxEdgeResponsesChanged,
 }) {
   showModalBottomSheet(
     context: context,
@@ -84,6 +90,25 @@ void showMapSettingsSheet(
                     Navigator.pop(context);
                   },
                 ),
+                if (notifier.state.displaySettings.showEdges)
+                  ListTile(
+                    title: const Text('Edge Line Limit'),
+                    subtitle: Text(
+                      notifier.state.displaySettings.maxEdgeResponses == null
+                          ? 'Show all lines'
+                          : 'Most recent ${notifier.state.displaySettings.maxEdgeResponses} lines',
+                    ),
+                    trailing: const Icon(Icons.tune),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _setMaxEdgeResponses(
+                        context,
+                        notifier.state.displaySettings.maxEdgeResponses,
+                        onMaxEdgeResponsesChanged,
+                        showSnackBar,
+                      );
+                    },
+                  ),
                 SwitchListTile(
                   title: const Text('Show Repeaters'),
                   value: notifier.state.displaySettings.showRepeaters,
@@ -119,6 +144,7 @@ void showMapSettingsSheet(
                   value: notifier.state.lockRotationNorth,
                   onChanged: (value) async {
                     notifier.setLockRotation(value);
+                    await settingsService.setLockRotationNorth(value);
                     Navigator.pop(context);
                     showSnackBar(value ? 'Rotation locked' : 'Rotation unlocked');
                   },
@@ -217,6 +243,59 @@ void showMapSettingsSheet(
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
+                    'Sonar Ping',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                SwitchListTile(
+                  title: const Text('Audio Ping While Recording'),
+                  subtitle: const Text('Plays a sonar sound to confirm tracking is active'),
+                  value: sonarPingEnabled,
+                  onChanged: (value) {
+                    onSonarEnabledChanged(value);
+                    Navigator.pop(context);
+                  },
+                ),
+                if (sonarPingEnabled)
+                  ListTile(
+                    title: const Text('Ping Interval'),
+                    subtitle: Text('Every $sonarPingInterval seconds'),
+                    trailing: const Icon(Icons.tune),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _setSonarInterval(context, sonarPingInterval, onSonarIntervalChanged, showSnackBar);
+                    },
+                  ),
+                const Divider(),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                    'Data',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Export'),
+                  subtitle: const Text('Save or share samples as JSON'),
+                  leading: const Icon(Icons.upload),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onExportData();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Import'),
+                  subtitle: const Text('Load samples from a JSON file'),
+                  leading: const Icon(Icons.download),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onImportData();
+                  },
+                ),
+                const Divider(),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
                     'Debug',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
@@ -238,15 +317,6 @@ void showMapSettingsSheet(
                     'Online Map',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
-                ),
-                ListTile(
-                  title: const Text('Upload Data'),
-                  subtitle: const Text('Upload samples to web map'),
-                  leading: const Icon(Icons.cloud_upload),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onUploadSamples();
-                  },
                 ),
                 ListTile(
                   title: const Text('Configure API'),
@@ -564,12 +634,12 @@ Future<void> _setCoverageResolution(
           ),
           ListTile(
             title: const Text('Neighborhood'),
-            subtitle: const Text('~1.2km squares (precision 6, default)'),
+            subtitle: const Text('~1.2km squares (precision 6)'),
             onTap: () => Navigator.pop(context, '6'),
           ),
           ListTile(
             title: const Text('Street-level'),
-            subtitle: const Text('~153m squares (precision 7)'),
+            subtitle: const Text('~153m squares (precision 7, default)'),
             onTap: () => Navigator.pop(context, '7'),
           ),
           ListTile(
@@ -588,6 +658,114 @@ Future<void> _setCoverageResolution(
     await settingsService.setCoveragePrecision(precision);
     await onLoadSamples();
     showSnackBar('Coverage resolution: ${_getCoverageResolutionDescription(notifier.state.displaySettings.coveragePrecision)}');
+  }
+}
+
+Future<void> _setMaxEdgeResponses(
+  BuildContext context,
+  int? current,
+  Future<void> Function(int?) onChanged,
+  void Function(String) showSnackBar,
+) async {
+  const options = [null, 10, 25, 50, 100];
+  final labels = {
+    null: 'Show all lines',
+    10: 'Most recent 10',
+    25: 'Most recent 25',
+    50: 'Most recent 50',
+    100: 'Most recent 100',
+  };
+
+  final selected = await showDialog<Object>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Edge Line Limit'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Limit which lines are drawn to the most recent responses. '
+            'Helps reduce clutter over long drives.',
+            style: TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          ...options.map((opt) => RadioListTile<Object>(
+                title: Text(labels[opt]!),
+                value: opt ?? 'unlimited',
+                groupValue: current ?? 'unlimited',
+                onChanged: (v) => Navigator.pop(context, v),
+                dense: true,
+              )),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ],
+    ),
+  );
+
+  if (selected != null) {
+    final value = selected == 'unlimited' ? null : selected as int;
+    await onChanged(value);
+    showSnackBar(value == null ? 'Showing all edge lines' : 'Showing most recent $value lines');
+  }
+}
+
+Future<void> _setSonarInterval(
+  BuildContext context,
+  int currentInterval,
+  void Function(int) onChanged,
+  void Function(String) showSnackBar,
+) async {
+  int selected = currentInterval;
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Sonar Ping Interval'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Every $selected seconds',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Slider(
+              value: selected.toDouble(),
+              min: 5,
+              max: 60,
+              divisions: 11, // 5,10,15,20,25,30,35,40,45,50,55,60
+              label: '${selected}s',
+              onChanged: (v) => setState(() => selected = v.round()),
+            ),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('5s', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('60s', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  if (confirmed == true) {
+    onChanged(selected);
+    showSnackBar('Sonar ping every ${selected}s');
   }
 }
 

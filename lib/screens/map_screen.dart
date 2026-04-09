@@ -34,6 +34,7 @@ import 'map_settings_sheet.dart';
 import 'chat_screen.dart';
 import '../services/chat_service.dart';
 import 'geofence_screen.dart';
+import '../services/sonar_ping_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -50,6 +51,7 @@ class _MapScreenState extends State<MapScreen> {
   final UploadService _uploadService = UploadService();
   final SettingsService _settingsService = SettingsService();
   late ChatService _chatService;
+  late SonarPingService _sonarService;
 
   late MapStateNotifier _notifier;
 
@@ -68,6 +70,7 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _notifier = MapStateNotifier();
     _chatService = ChatService(_locationService.loraCompanion);
+    _sonarService = SonarPingService();
     _initialize();
   }
 
@@ -130,6 +133,12 @@ class _MapScreenState extends State<MapScreen> {
     final coveragePrecision = await _settingsService.getCoveragePrecision();
     final ignoredPrefix = await _settingsService.getIgnoredRepeaterPrefix();
     final includeOnly = await _settingsService.getIncludeOnlyRepeaters();
+    final sonarEnabled = await _settingsService.getSonarPingEnabled();
+    final sonarInterval = await _settingsService.getSonarPingInterval();
+    _sonarService.enabled = sonarEnabled;
+    _sonarService.intervalSeconds = sonarInterval;
+    final maxEdges = await _settingsService.getMaxEdgeResponses();
+    final lockRotation = await _settingsService.getLockRotationNorth();
     
     _notifier.updateDisplaySettings(MapDisplaySettings(
       showSamples: showSamples,
@@ -142,7 +151,9 @@ class _MapScreenState extends State<MapScreen> {
       coveragePrecision: coveragePrecision,
       ignoredRepeaterPrefix: ignoredPrefix,
       includeOnlyRepeaters: includeOnly,
+      maxEdgeResponses: maxEdges,
     ));
+    _notifier.setLockRotation(lockRotation);
 
     // Apply to services
     _locationService.setPingInterval(pingInterval);
@@ -196,11 +207,13 @@ class _MapScreenState extends State<MapScreen> {
       // Stop tracking and auto-ping
       await _locationService.stopTracking();
       _locationService.disableAutoPing();
+      _sonarService.stop();
       _notifier.setTracking(isTracking: false, autoPingEnabled: false);
     } else {
       // Start tracking
       final started = await _locationService.startTracking();
       if (started) {
+        _sonarService.start();
         // Auto-enable ping if LoRa is connected
         if (_notifier.state.loraConnected) {
           _locationService.enableAutoPing();
@@ -371,6 +384,7 @@ class _MapScreenState extends State<MapScreen> {
     _sampleSavedSubscription?.cancel();
     _pingEventSubscription?.cancel();
     _geofenceStatusSubscription?.cancel();
+    _sonarService.dispose();
     _locationService.dispose();
     _notifier.dispose();
     super.dispose();
@@ -435,11 +449,26 @@ class _MapScreenState extends State<MapScreen> {
               _settingsService,
               _locationService,
               showSnackBar: _showSnackBar,
-              onUploadSamples: _uploadSamples,
+              onExportData: _exportData,
+              onImportData: _importData,
               onConfigureUploadUrl: _configureUploadUrl,
               onLoadSamples: _loadSamples,
               onScanForRepeaters: _scanForRepeaters,
               onRefreshContacts: _refreshContacts,
+              sonarPingEnabled: _sonarService.enabled,
+              sonarPingInterval: _sonarService.intervalSeconds,
+              onSonarEnabledChanged: (v) async {
+                _sonarService.setEnabled(v);
+                await _settingsService.setSonarPingEnabled(v);
+              },
+              onSonarIntervalChanged: (v) async {
+                _sonarService.setInterval(v);
+                await _settingsService.setSonarPingInterval(v);
+              },
+              onMaxEdgeResponsesChanged: (v) async {
+                _notifier.setMaxEdgeResponses(v);
+                await _settingsService.setMaxEdgeResponses(v);
+              },
             ),
           ),
         ],
@@ -447,13 +476,12 @@ class _MapScreenState extends State<MapScreen> {
       body: Stack(
         children: [
           _buildMap(),
-          buildMapControlPanel(
-            _notifier.state,
+          MapControlPanel(
+            state: _notifier.state,
             onConnect: _showConnectionDialog,
             onDisconnect: _disconnectLoRa,
             onManualPing: _manualPing,
-            onExport: _exportData,
-            onImport: _importData,
+            onUpload: _uploadSamples,
             onClearData: _clearData,
           ),
           if (_outsideGeofence)
@@ -564,7 +592,10 @@ class _MapScreenState extends State<MapScreen> {
             (s) => _showSampleInfo(s),
           ),
         if (_notifier.state.displaySettings.showEdges && _notifier.state.aggregationResult != null)
-          buildEdgeLayer(_notifier.state.aggregationResult!),
+          buildEdgeLayer(
+            _notifier.state.aggregationResult!,
+            maxEdgeResponses: _notifier.state.displaySettings.maxEdgeResponses,
+          ),
         if (_notifier.state.displaySettings.showRepeaters)
           buildRepeaterLayer(
             _notifier.state.repeaters,

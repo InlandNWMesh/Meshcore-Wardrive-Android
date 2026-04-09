@@ -15,6 +15,10 @@ class SettingsService {
   static const String _geofenceEastKey  = 'geofence_east';
   static const String _geofenceWestKey  = 'geofence_west';
   static const String _includeOnlyRepeatersKey = 'include_only_repeaters';
+  static const String _sonarPingEnabledKey = 'sonar_ping_enabled';
+  static const String _sonarPingIntervalKey = 'sonar_ping_interval';
+  static const String _maxEdgeResponsesKey = 'max_edge_responses';
+  static const String _lockRotationNorthKey = 'lock_rotation_north';
   
   Future<bool> getShowSamples() async {
     final prefs = await SharedPreferences.getInstance();
@@ -88,7 +92,7 @@ class SettingsService {
   
   Future<int> getCoveragePrecision() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_coveragePrecisionKey) ?? 6; // Default precision 6
+    return prefs.getInt(_coveragePrecisionKey) ?? 7; // Default precision 7 (~153m street-level)
   }
   
   Future<void> setCoveragePrecision(int value) async {
@@ -123,6 +127,51 @@ class SettingsService {
       await prefs.remove(_includeOnlyRepeatersKey);
     } else {
       await prefs.setString(_includeOnlyRepeatersKey, value);
+    }
+  }
+
+  Future<bool> getSonarPingEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_sonarPingEnabledKey) ?? false;
+  }
+
+  Future<void> setSonarPingEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_sonarPingEnabledKey, value);
+  }
+
+  Future<int> getSonarPingInterval() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_sonarPingIntervalKey) ?? 10;
+  }
+
+  Future<void> setSonarPingInterval(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_sonarPingIntervalKey, value.clamp(5, 60));
+  }
+
+  Future<bool> getLockRotationNorth() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_lockRotationNorthKey) ?? true; // Default: on
+  }
+
+  Future<void> setLockRotationNorth(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_lockRotationNorthKey, value);
+  }
+
+  /// null = unlimited (show all edges)
+  Future<int?> getMaxEdgeResponses() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_maxEdgeResponsesKey);
+  }
+
+  Future<void> setMaxEdgeResponses(int? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_maxEdgeResponsesKey);
+    } else {
+      await prefs.setInt(_maxEdgeResponsesKey, value);
     }
   }
 

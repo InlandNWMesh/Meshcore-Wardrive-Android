@@ -13,6 +13,9 @@ class MapDisplaySettings {
   final String? includeOnlyRepeaters;
   final double pingIntervalMeters;
   final int coveragePrecision;
+  /// Max number of edges (lines) to display, sorted by most-recent response.
+  /// null = show all edges.
+  final int? maxEdgeResponses;
 
   const MapDisplaySettings({
     this.colorMode = 'quality',
@@ -27,6 +30,7 @@ class MapDisplaySettings {
     this.includeOnlyRepeaters,
     this.pingIntervalMeters = kDefaultPingIntervalMeters,
     this.coveragePrecision = kDefaultCoveragePrecision,
+    this.maxEdgeResponses,
   });
 
   MapDisplaySettings copyWith({
@@ -42,6 +46,7 @@ class MapDisplaySettings {
     Object? includeOnlyRepeaters = _sentinel,
     double? pingIntervalMeters,
     int? coveragePrecision,
+    Object? maxEdgeResponses = _sentinel,
   }) {
     return MapDisplaySettings(
       colorMode: colorMode ?? this.colorMode,
@@ -60,6 +65,9 @@ class MapDisplaySettings {
           : includeOnlyRepeaters as String?,
       pingIntervalMeters: pingIntervalMeters ?? this.pingIntervalMeters,
       coveragePrecision: coveragePrecision ?? this.coveragePrecision,
+      maxEdgeResponses: identical(maxEdgeResponses, _sentinel)
+          ? this.maxEdgeResponses
+          : maxEdgeResponses as int?,
     );
   }
 }

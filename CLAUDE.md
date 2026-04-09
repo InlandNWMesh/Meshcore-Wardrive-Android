@@ -120,4 +120,8 @@ Requires Android foreground service (`flutter_foreground_task`) with persistent 
 - New settings: `lib/services/settings_service.dart` + `SharedPreferences` key
 - Geofence logic: `lib/screens/geofence_screen.dart` + `lib/services/settings_service.dart` (`getGeofence`/`saveGeofence`)
 - Database schema changes: `lib/services/database_service.dart` — increment version and add migration
-- App version: `lib/constants/app_version.dart` + `pubspec.yaml`
+- App version: `lib/constants/app_version.dart` + `pubspec.yaml` — both must be updated together on each release
+
+## Tests
+
+The test suite (`test/`) is currently minimal (widget smoke test only). There are no unit tests for services or models yet.

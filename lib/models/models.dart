@@ -172,10 +172,13 @@ class Repeater {
 class Edge {
   final Coverage coverage;
   final Repeater repeater;
+  /// Timestamp of the most recent successful response for this (coverage, repeater) pair.
+  final DateTime? timestamp;
 
   Edge({
     required this.coverage,
     required this.repeater,
+    this.timestamp,
   });
 }
 

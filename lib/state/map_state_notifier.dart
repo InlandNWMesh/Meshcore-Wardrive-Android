@@ -174,6 +174,7 @@ class MapStateNotifier extends ChangeNotifier {
   void setCoveragePrecision(int v) => updateDisplaySettings(_state.displaySettings.copyWith(coveragePrecision: v));
   void setIgnoredRepeaterPrefix(String? v) => updateDisplaySettings(_state.displaySettings.copyWith(ignoredRepeaterPrefix: v));
   void setIncludeOnlyRepeaters(String? v) => updateDisplaySettings(_state.displaySettings.copyWith(includeOnlyRepeaters: v));
+  void setMaxEdgeResponses(int? v) => updateDisplaySettings(_state.displaySettings.copyWith(maxEdgeResponses: v));
 
   // ── Filtered sample computation ────────────────────────────────────────────
 
