@@ -87,10 +87,10 @@ class UploadService {
       final response = await _httpClient.get(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final msgJson = body['message'] as Map<String, dynamic>?;
+        final msgsJson = body['messages'] as List<dynamic>? ?? [];
         return ValidateResult(
           minVersion: body['min_version'] as String?,
-          message: msgJson != null ? AdminMessage.fromJson(msgJson) : null,
+          messages: msgsJson.map((m) => AdminMessage.fromJson(m as Map<String, dynamic>)).toList(),
         );
       }
       if (response.statusCode == 429) return const ValidateResult(error: 'Too many attempts — try again shortly');
@@ -204,9 +204,9 @@ class UploadResult {
 class ValidateResult {
   final String? error;
   final String? minVersion;
-  final AdminMessage? message;
+  final List<AdminMessage> messages;
 
-  const ValidateResult({this.error, this.minVersion, this.message});
+  const ValidateResult({this.error, this.minVersion, this.messages = const []});
 
   bool get isOffline => error == 'Could not reach server';
   bool get isValid => error == null;
