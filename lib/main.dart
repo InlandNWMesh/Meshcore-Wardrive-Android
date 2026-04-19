@@ -107,15 +107,20 @@ class _StartupGateState extends State<StartupGate> {
 
   Future<void> _checkAndProceed() async {
     final uploadService = UploadService();
-    final token = await uploadService.getContributorToken();
-    final url = await uploadService.getApiUrl();
 
     if (!mounted) return;
 
-    if (token.isEmpty) {
-      // No token — must set one before the map loads.
+    // Ensure a token exists before doing anything else.
+    if ((await uploadService.getContributorToken()).isEmpty) {
       await showUploadSettingsDialog(context, uploadService, required: true);
-    } else {
+      if (!mounted) return;
+    }
+
+    // Always validate with whatever token is now set (covers first-run too).
+    final token = await uploadService.getContributorToken();
+    final url = await uploadService.getApiUrl();
+
+    if (token.isNotEmpty) {
       final result = await uploadService.validateToken(url, token);
       if (!mounted) return;
 
@@ -136,9 +141,9 @@ class _StartupGateState extends State<StartupGate> {
             return; // Do not navigate to map — user must update.
           }
 
-          // Show admin message if unseen.
-          if (result.message != null) {
-            await maybeShowAdminMessage(context, result.message!);
+          // Show any unseen admin messages.
+          if (result.messages.isNotEmpty) {
+            await maybeShowAdminMessages(context, result.messages);
             if (!mounted) return;
           }
         }
