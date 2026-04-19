@@ -79,18 +79,24 @@ class UploadService {
   }
 
   /// Validates a contributor token against the server.
-  /// Returns null on success, or an error string on failure.
-  Future<String?> validateToken(String baseUrl, String token) async {
-    if (token.isEmpty) return 'Token is required';
+  Future<ValidateResult> validateToken(String baseUrl, String token) async {
+    if (token.isEmpty) return const ValidateResult(error: 'Token is required');
     try {
       final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
       final url = Uri.parse('${base}${token}/validate');
       final response = await _httpClient.get(url).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) return null;
-      if (response.statusCode == 429) return 'Too many attempts — try again shortly';
-      return 'Invalid or disabled token';
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final msgJson = body['message'] as Map<String, dynamic>?;
+        return ValidateResult(
+          minVersion: body['min_version'] as String?,
+          message: msgJson != null ? AdminMessage.fromJson(msgJson) : null,
+        );
+      }
+      if (response.statusCode == 429) return const ValidateResult(error: 'Too many attempts — try again shortly');
+      return const ValidateResult(error: 'Invalid or disabled token');
     } catch (_) {
-      return 'Could not reach server';
+      return const ValidateResult(error: 'Could not reach server');
     }
   }
 
@@ -193,4 +199,29 @@ class UploadResult {
     this.uploadedCount,
     this.totalCount,
   });
+}
+
+class ValidateResult {
+  final String? error;
+  final String? minVersion;
+  final AdminMessage? message;
+
+  const ValidateResult({this.error, this.minVersion, this.message});
+
+  bool get isOffline => error == 'Could not reach server';
+  bool get isValid => error == null;
+}
+
+class AdminMessage {
+  final int id;
+  final String? title;
+  final String body;
+
+  const AdminMessage({required this.id, this.title, required this.body});
+
+  factory AdminMessage.fromJson(Map<String, dynamic> json) => AdminMessage(
+        id: json['id'] as int,
+        title: json['title'] as String?,
+        body: json['body'] as String,
+      );
 }

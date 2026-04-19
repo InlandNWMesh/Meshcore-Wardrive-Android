@@ -38,13 +38,13 @@ Future<void> showUploadSettingsDialog(
             tokenValid = null;
             tokenError = null;
           });
-          final error = await uploadService.validateToken(
+          final result = await uploadService.validateToken(
               urlController.text, tokenController.text);
           if (gen != validationGeneration) return; // stale — newer call in flight
           setState(() {
             tokenValidating = false;
-            tokenValid = error == null;
-            tokenError = error;
+            tokenValid = result.isValid;
+            tokenError = result.error;
           });
         }
 

@@ -25,6 +25,7 @@ import '../models/map_display_settings.dart';
 import '../state/map_state_notifier.dart';
 import '../widgets/map_layers.dart';
 import '../widgets/map_control_panel.dart';
+import 'dialogs/show_antenna_warning_dialog.dart';
 import 'dialogs/show_coverage_info_dialog.dart';
 import 'dialogs/show_sample_info_dialog.dart';
 import 'dialogs/show_repeater_info_dialog.dart';
@@ -72,6 +73,9 @@ class _MapScreenState extends State<MapScreen> {
     _chatService = ChatService(_locationService.loraCompanion);
     _sonarService = SonarPingService();
     _initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeShowAntennaWarning(context);
+    });
   }
 
   Future<void> _initialize() async {

@@ -4,6 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/map_screen.dart';
 import 'services/upload_service.dart';
 import 'screens/dialogs/show_upload_settings_dialog.dart';
+import 'screens/dialogs/show_update_required_dialog.dart';
+import 'screens/dialogs/show_admin_message_dialog.dart';
+import 'utils/version_utils.dart';
+import 'constants/app_version.dart';
 
 void main() {
   // Lock to portrait mode (true north)
@@ -112,14 +116,34 @@ class _StartupGateState extends State<StartupGate> {
       // No token — must set one before the map loads.
       await showUploadSettingsDialog(context, uploadService, required: true);
     } else {
-      final error = await uploadService.validateToken(url, token);
+      final result = await uploadService.validateToken(url, token);
       if (!mounted) return;
 
-      if (error != null && error != 'Could not reach server') {
-        // Server explicitly rejected the token — force re-entry.
-        await showUploadSettingsDialog(context, uploadService, required: true);
+      if (!result.isOffline) {
+        if (!result.isValid) {
+          // Server explicitly rejected the token — force re-entry.
+          await showUploadSettingsDialog(context, uploadService, required: true);
+          if (!mounted) return;
+        } else {
+          // Check minimum version (blocking — user cannot proceed if outdated).
+          if (result.minVersion != null &&
+              isVersionBelow(appVersion, result.minVersion!)) {
+            await showUpdateRequiredDialog(
+              context,
+              currentVersion: appVersion,
+              minVersion: result.minVersion!,
+            );
+            return; // Do not navigate to map — user must update.
+          }
+
+          // Show admin message if unseen.
+          if (result.message != null) {
+            await maybeShowAdminMessage(context, result.message!);
+            if (!mounted) return;
+          }
+        }
       }
-      // null (valid) or 'Could not reach server' (offline) → proceed normally.
+      // isOffline → proceed normally (skip all checks).
     }
 
     if (!mounted) return;
