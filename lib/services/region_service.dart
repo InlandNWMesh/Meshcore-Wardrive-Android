@@ -12,10 +12,26 @@ class RegionInfo {
   final DateTime askedAt;
   final bool answered;
 
+  /// Link quality at the moment the request went out, from the discovery reply
+  /// that put this repeater in range.
+  ///
+  /// Recorded because the signal floor worth asking above is unknown: the only
+  /// success so far was -45 dBm at a desk, which cannot distinguish "needs -45"
+  /// from "needs -95". Pairing every ask with its signal turns one drive into an
+  /// answer-rate-versus-signal curve, so the threshold can be measured instead
+  /// of guessed. That matters more than it looks, because RSSI is what *we* hear
+  /// from *them* — repeaters usually sit higher with better antennas, so a
+  /// strong reading overstates our ability to reach them, by an amount that
+  /// varies per site and cannot be reasoned out from link budget alone.
+  final int? rssi;
+  final int? snr;
+
   const RegionInfo({
     required this.regions,
     required this.askedAt,
     required this.answered,
+    this.rssi,
+    this.snr,
   });
 
   bool get hasRegions => answered && regions.isNotEmpty;
@@ -24,12 +40,16 @@ class RegionInfo {
     'regions': regions,
     'askedAt': askedAt.toIso8601String(),
     'answered': answered,
+    if (rssi != null) 'rssi': rssi,
+    if (snr != null) 'snr': snr,
   };
 
   factory RegionInfo.fromJson(Map<String, dynamic> j) => RegionInfo(
     regions: (j['regions'] as List?)?.map((e) => e.toString()).toList() ?? const [],
     askedAt: DateTime.tryParse(j['askedAt'] as String? ?? '') ?? DateTime(1970),
     answered: j['answered'] == true,
+    rssi: (j['rssi'] as num?)?.toInt(),
+    snr: (j['snr'] as num?)?.toInt(),
   );
 }
 
@@ -41,6 +61,7 @@ class RegionInfo {
 class RegionService {
   static const _enabledKey = 'region_discovery_enabled';
   static const _cacheKey = 'region_cache_v1';
+  static const _askLogKey = 'region_ask_log_v1';
 
   /// A repeater that answered is not asked again for this long. Its regions
   /// only change when somebody reconfigures it.
@@ -53,10 +74,16 @@ class RegionService {
 
   /// Firmware allows 4 anon requests per 3 minutes (`anon_limiter(4, 180)`).
   /// Three attempts leaves one spare for the owner/clock request types, which
-  /// share that same counter.
+  /// share that same counter. This is the ceiling, not the drive-time value —
+  /// see `AppConfigService.regionDiscovery.attempts`.
   static const maxAttempts = 3;
 
+  /// How many past asks to keep for threshold fitting. ~100 bytes each, so this
+  /// is well under a megabyte and several drives deep.
+  static const askLogLimit = 2000;
+
   final Map<String, RegionInfo> _cache = {};
+  final List<Map<String, dynamic>> _askLog = [];
   bool _loaded = false;
 
   // ── setting ────────────────────────────────────────────────────────────────
@@ -78,20 +105,38 @@ class RegionService {
   Future<void> _load() async {
     if (_loaded) return;
     _loaded = true;
+    final prefs = await SharedPreferences.getInstance();
     try {
-      final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_cacheKey);
-      if (raw == null) return;
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map) return;
-      decoded.forEach((k, v) {
-        if (v is Map) {
-          _cache[k.toString()] = RegionInfo.fromJson(Map<String, dynamic>.from(v));
+      if (raw != null) {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          decoded.forEach((k, v) {
+            if (v is Map) {
+              _cache[k.toString()] =
+                  RegionInfo.fromJson(Map<String, dynamic>.from(v));
+            }
+          });
         }
-      });
+      }
     } catch (_) {
       // A corrupt cache is not worth losing a drive over — start empty.
       _cache.clear();
+    }
+    // Loaded separately so a corrupt ask log cannot cost us the region cache,
+    // or the other way round.
+    try {
+      final rawLog = prefs.getString(_askLogKey);
+      if (rawLog != null) {
+        final decoded = jsonDecode(rawLog);
+        if (decoded is List) {
+          for (final e in decoded) {
+            if (e is Map) _askLog.add(Map<String, dynamic>.from(e));
+          }
+        }
+      }
+    } catch (_) {
+      _askLog.clear();
     }
   }
 
@@ -101,6 +146,7 @@ class RegionService {
       _cacheKey,
       jsonEncode(_cache.map((k, v) => MapEntry(k, v.toJson()))),
     );
+    await prefs.setString(_askLogKey, jsonEncode(_askLog));
   }
 
   /// Regions for a repeater, or null if we have never had an answer from it.
@@ -123,14 +169,64 @@ class RegionService {
     return age > (info.answered ? answeredTtl : unansweredTtl);
   }
 
-  Future<void> record(String nodeId, List<String> regions, {required bool answered}) async {
+  Future<void> record(
+    String nodeId,
+    List<String> regions, {
+    required bool answered,
+    int? rssi,
+    int? snr,
+  }) async {
     await _load();
+    final now = DateTime.now();
     _cache[nodeId.toUpperCase()] = RegionInfo(
       regions: regions,
-      askedAt: DateTime.now(),
+      askedAt: now,
       answered: answered,
+      rssi: rssi,
+      snr: snr,
     );
+    // The cache holds only the latest state per repeater, which is what the map
+    // needs but is useless for tuning: a node asked five times leaves one row.
+    // The ask log keeps every attempt, and that is the sample the signal
+    // threshold gets fitted from.
+    _askLog.add({
+      'nodeId': nodeId.toUpperCase(),
+      'at': now.toIso8601String(),
+      'answered': answered,
+      'regionCount': answered ? regions.length : null,
+      'rssi': rssi,
+      'snr': snr,
+    });
+    if (_askLog.length > askLogLimit) {
+      _askLog.removeRange(0, _askLog.length - askLogLimit);
+    }
     await _save();
+  }
+
+  /// Every region request made, oldest first — the raw sample for choosing the
+  /// signal floor. Bounded, so a long-running install cannot grow without limit.
+  Future<List<Map<String, dynamic>>> askLog() async {
+    await _load();
+    return List<Map<String, dynamic>>.unmodifiable(_askLog);
+  }
+
+  /// Answer rate bucketed by RSSI — the curve the threshold comes from.
+  ///
+  /// Returns `{bucketFloorDbm: {asked, answered}}` in 10 dBm buckets. Reported
+  /// as counts rather than a percentage on purpose: a bucket with 1 ask and 1
+  /// answer is not "100%", and a rate alone hides that.
+  Future<Map<int, Map<String, int>>> answerRateByRssi({int bucketSize = 10}) async {
+    await _load();
+    final out = <int, Map<String, int>>{};
+    for (final e in _askLog) {
+      final rssi = (e['rssi'] as num?)?.toInt();
+      if (rssi == null) continue;
+      final bucket = (rssi / bucketSize).floor() * bucketSize;
+      final row = out.putIfAbsent(bucket, () => {'asked': 0, 'answered': 0});
+      row['asked'] = row['asked']! + 1;
+      if (e['answered'] == true) row['answered'] = row['answered']! + 1;
+    }
+    return out;
   }
 
   /// Node ids we have region lists for, for map colouring and export.

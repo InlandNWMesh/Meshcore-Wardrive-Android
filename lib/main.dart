@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/map_screen.dart';
+import 'services/app_config_service.dart';
 import 'services/upload_service.dart';
 import 'screens/dialogs/show_upload_settings_dialog.dart';
 import 'screens/dialogs/show_update_required_dialog.dart';
@@ -107,6 +110,14 @@ class _StartupGateState extends State<StartupGate> {
 
   Future<void> _checkAndProceed() async {
     final uploadService = UploadService();
+
+    // Load cached tunables now, and refresh in the background. Deliberately not
+    // awaited: config must never sit between the user and a drive, and a phone
+    // with no signal is the normal case out here, not an error. Whatever was
+    // cached last time (or the shipped defaults) is already in force.
+    final appConfig = AppConfigService();
+    await appConfig.load();
+    unawaited(uploadService.getApiUrl().then(appConfig.refresh));
 
     if (!mounted) return;
 

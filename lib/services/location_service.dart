@@ -11,6 +11,7 @@ import '../utils/geohash_utils.dart';
 import '../constants/map_constants.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'app_config_service.dart';
 import 'persistent_debug_logger.dart';
 import 'region_service.dart';
 
@@ -25,15 +26,9 @@ class LocationService {
   /// same reason the companion CLI takes an exclusive lock.
   bool _regionLookupBusy = false;
 
-  /// How long one ping's worth of region requests may run before the batch is
-  /// abandoned.
-  ///
-  /// Sized against movement, not against the radio: at 35 mph the 805 m ping
-  /// interval comes round in ~50 s, and a repeater heard at the last ping is
-  /// out of range long before that. Stopping at 25 s keeps every request close
-  /// to the moment the node was actually heard, and leaves the radio free for
-  /// the ping loop, which is the measurement that matters most.
-  static const _regionBatchBudget = Duration(seconds: 25);
+  /// Server-tunable thresholds, so the signal floor can be retuned from drive
+  /// data without shipping a new APK. Reads shipped defaults until refreshed.
+  final AppConfigService _appConfig = AppConfigService();
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isTracking = false;
   bool _autoPingEnabled = false;
@@ -400,14 +395,27 @@ class LocationService {
   ///
   /// Rate limits are not the constraint here: `anon_limiter(4, 180)` is counted
   /// per repeater, so asking many *different* repeaters throttles nothing.
+  ///
+  /// **The signal floor is a noise-floor guard, not a quality filter.** It only
+  /// skips links that are effectively not there, so a request does not burn
+  /// eight seconds of budget on a node that cannot reply. It is deliberately
+  /// permissive: the answer rate versus signal has never been measured, and a
+  /// tight threshold would suppress exactly the asks needed to find where
+  /// replies actually stop. Every ask is logged with its RSSI/SNR
+  /// (`RegionService.answerRateByRssi`) so the real floor can be fitted from
+  /// drive data, then set from the server without a new APK.
   Future<void> _maybeDiscoverRegions(PingResult result) async {
     if (result.responses.isEmpty) return;
     if (_regionLookupBusy) return;
     if (!await _regionService.isEnabled()) return;
 
+    final cfg = _appConfig.regionDiscovery;
+
     _regionLookupBusy = true;
-    final deadline = DateTime.now().add(_regionBatchBudget);
+    final deadline =
+        DateTime.now().add(Duration(seconds: cfg.batchBudgetSeconds));
     var asked = 0;
+    var skippedWeak = 0;
     try {
       // result.responses is already sorted strongest-first, which is also
       // most-likely-still-in-range order.
@@ -420,24 +428,46 @@ class LocationService {
         final pk = resp.pubkey;
         // Needs the whole 32-byte key; a truncated id cannot address a request.
         if (pk == null || pk.length < 64) continue;
+
+        // Below the noise floor there is no link to answer over. Missing
+        // readings are asked anyway rather than skipped — absent data is not
+        // evidence of a weak link, and treating it as such would quietly shrink
+        // the sample the threshold gets fitted from.
+        final rssi = resp.rssi;
+        final snr = resp.snr;
+        if ((rssi != null && rssi < cfg.minRssi) ||
+            (snr != null && snr < cfg.minSnr)) {
+          skippedWeak++;
+          continue;
+        }
+
         if (!await _regionService.shouldAsk(resp.nodeId)) continue;
 
         try {
           final bytes = Uint8List.fromList(List<int>.generate(
             32, (i) => int.parse(pk.substring(i * 2, i * 2 + 2), radix: 16)));
-          final regions =
-              await _loraCompanion.requestRegions(bytes, attempts: 1);
+          final regions = await _loraCompanion.requestRegions(
+            bytes,
+            attempts: cfg.attempts,
+            perAttemptTimeout: Duration(seconds: cfg.perAttemptTimeoutSeconds),
+          );
           asked++;
           // null = never answered, [] = answered with no flood-enabled regions.
           // Recorded distinctly so the retry schedule can tell them apart.
+          // RSSI/SNR go in alongside so the ask log can be fitted later.
           await _regionService.record(resp.nodeId, regions ?? const [],
-              answered: regions != null);
+              answered: regions != null, rssi: rssi, snr: snr);
           await _logger.logPingEvent(regions == null
-              ? 'Regions: ${resp.nodeId} did not answer'
-              : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")}');
+              ? 'Regions: ${resp.nodeId} did not answer (rssi=$rssi snr=$snr)'
+              : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")} (rssi=$rssi snr=$snr)');
         } catch (e) {
           await _logger.logError('Region discovery', e.toString());
         }
+      }
+      if (skippedWeak > 0) {
+        await _logger.logPingEvent(
+            'Regions: skipped $skippedWeak below floor '
+            '(rssi<${cfg.minRssi} or snr<${cfg.minSnr})');
       }
     } finally {
       _regionLookupBusy = false;
