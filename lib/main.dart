@@ -8,6 +8,7 @@ import 'services/app_config_service.dart';
 import 'services/upload_service.dart';
 import 'screens/dialogs/show_upload_settings_dialog.dart';
 import 'screens/dialogs/show_update_required_dialog.dart';
+import 'screens/dialogs/show_update_available_dialog.dart';
 import 'screens/dialogs/show_admin_message_dialog.dart';
 import 'utils/version_utils.dart';
 import 'constants/app_version.dart';
@@ -148,9 +149,21 @@ class _StartupGateState extends State<StartupGate> {
               context,
               currentVersion: appVersion,
               minVersion: result.minVersion!,
+              updateUrl: result.updateUrl,
             );
             return; // Do not navigate to map — user must update.
           }
+
+          // Non-blocking nag when a newer build is recommended. Only reached
+          // when the hard block above did not fire, so the two never stack.
+          await maybeShowUpdateAvailable(
+            context,
+            currentVersion: appVersion,
+            recommendedVersion: result.recommendedVersion,
+            updateUrl: result.updateUrl,
+            updateNotes: result.updateNotes,
+          );
+          if (!mounted) return;
 
           // Show any unseen admin messages.
           if (result.messages.isNotEmpty) {

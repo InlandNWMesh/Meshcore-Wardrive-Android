@@ -90,6 +90,9 @@ class UploadService {
         final msgsJson = body['messages'] as List<dynamic>? ?? [];
         return ValidateResult(
           minVersion: body['min_version'] as String?,
+          recommendedVersion: body['recommended_version'] as String?,
+          updateUrl: body['update_url'] as String?,
+          updateNotes: body['update_notes'] as String?,
           messages: msgsJson.map((m) => AdminMessage.fromJson(m as Map<String, dynamic>)).toList(),
         );
       }
@@ -209,10 +212,32 @@ class UploadResult {
 
 class ValidateResult {
   final String? error;
+
+  /// Hard floor — below this the app blocks. Reserved for data-corrupting or
+  /// security problems, because blocking also stops the client collecting.
   final String? minVersion;
+
+  /// Soft floor — below this the app nags but keeps working.
+  final String? recommendedVersion;
+
+  /// Where to get the build. Server-supplied so the download can move without
+  /// shipping a new APK — which matters when the point is getting people OFF
+  /// the version they are on.
+  final String? updateUrl;
+
+  /// Optional one-liner on why this update matters.
+  final String? updateNotes;
+
   final List<AdminMessage> messages;
 
-  const ValidateResult({this.error, this.minVersion, this.messages = const []});
+  const ValidateResult({
+    this.error,
+    this.minVersion,
+    this.recommendedVersion,
+    this.updateUrl,
+    this.updateNotes,
+    this.messages = const [],
+  });
 
   bool get isOffline => error == 'Could not reach server';
   bool get isValid => error == null;
