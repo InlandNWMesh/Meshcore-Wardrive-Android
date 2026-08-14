@@ -660,11 +660,15 @@ class LoRaCompanionService {
 
   /// Ask a repeater for its flood-enabled regions.
   ///
-  /// Retries because the link is lossy and a single unanswered request tells us
-  /// nothing — but stops the moment an answer arrives, so a responsive repeater
-  /// costs exactly one transmission. Three attempts is the ceiling: firmware
-  /// allows 4 anon requests per 3 minutes and the owner/clock request types
-  /// share that same counter.
+  /// Stops the moment an answer arrives, so a responsive repeater costs exactly
+  /// one transmission. Three attempts is the ceiling when retrying is worth
+  /// anything at all: firmware allows 4 anon requests per 3 minutes and the
+  /// owner/clock request types share that same counter.
+  ///
+  /// ⚠ Retrying only helps a **stationary** caller, where a second attempt is a
+  /// genuine second try at the same link. While driving, pass `attempts: 1` —
+  /// see `LocationService._maybeDiscoverRegions` for why a retry from a moving
+  /// vehicle is a different question, not a repeated one.
   ///
   /// Returns null when no reply arrived — which is NOT the same as an empty
   /// region list. An empty list from a repeater that answered is a real result.
@@ -684,9 +688,20 @@ class LoRaCompanionService {
 
     for (var attempt = 1; attempt <= attempts; attempt++) {
       try {
-        // Zero-hop reply path: we only ask repeaters we just heard directly,
-        // so the answer comes straight back. The length byte is always sent —
-        // omitting it makes the firmware flood its reply.
+        // Zero-hop reply path. This is correct rather than merely convenient:
+        // a repeater sends its DISCOVER_RESP with sendZeroHop(), so having
+        // heard one is proof the node was in direct range, and the answer comes
+        // straight back the same way.
+        //
+        // An empty path is also the only workable choice for a node we hold no
+        // path to. The companion gives an unknown pubkey out_path_len = 0
+        // (zero-hop direct); the alternative, OUT_PATH_UNKNOWN, makes
+        // sendAnonReq() flood, and the repeater's isRouteDirect() gate then
+        // drops the request silently. Reaching past direct range needs a real
+        // stored path, which this app does not yet gather.
+        //
+        // The length byte is always sent — omitting it makes the firmware flood
+        // its reply.
         final payload = _protocol.createAnonRegionRequestPayload(
           targetPubkey,
           replyPath: const [],

@@ -20,10 +20,20 @@ class LocationService {
   final PersistentDebugLogger _logger = PersistentDebugLogger();
   final RegionService _regionService = RegionService();
 
-  /// One region request at a time. They share the single radio with the ping
+  /// One region batch at a time. They share the single radio with the ping
   /// loop, and two overlapping exchanges interleave frames on one stream — the
   /// same reason the companion CLI takes an exclusive lock.
   bool _regionLookupBusy = false;
+
+  /// How long one ping's worth of region requests may run before the batch is
+  /// abandoned.
+  ///
+  /// Sized against movement, not against the radio: at 35 mph the 805 m ping
+  /// interval comes round in ~50 s, and a repeater heard at the last ping is
+  /// out of range long before that. Stopping at 25 s keeps every request close
+  /// to the moment the node was actually heard, and leaves the radio free for
+  /// the ping loop, which is the measurement that matters most.
+  static const _regionBatchBudget = Duration(seconds: 25);
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isTracking = false;
   bool _autoPingEnabled = false;
@@ -361,41 +371,76 @@ class LocationService {
     }
   }
   
-  /// Ask ONE newly-seen repeater for its regions, if the user enabled it.
+  /// Ask the repeaters we just heard for their regions, if the user enabled it.
   ///
-  /// One per ping, not one per responder: the firmware allows 4 anon requests
-  /// per 3 minutes and the radio is shared with the ping loop, so pacing it this
-  /// way collects the fleet gradually over a drive instead of bursting. Anything
-  /// already answered (or asked recently and ignored) is skipped by RegionService.
+  /// Asked strongest-first, ONE attempt each, until the batch budget runs out.
+  /// The shape of this matters more than it looks, and the first drive
+  /// (2026-08-14: 33 nodes asked, 33 silent) is what established it.
+  ///
+  /// **Why one attempt, not three.** A repeater only answers an anon request
+  /// that arrives by a direct route, and — because the firmware sends
+  /// DISCOVER_RESP with sendZeroHop() — a discovery reply proves the node was in
+  /// direct range *at that moment* and says nothing about ten seconds later. In
+  /// a moving vehicle a retry is not a second try at the same question; it is
+  /// the same question asked from several hundred metres further away, against a
+  /// link that has usually already gone. Retrying one node three times spent
+  /// ~30 s and blocked every other node behind it. Asking three nodes once each
+  /// costs the same airtime and covers three times the fleet.
+  ///
+  /// Nodes that stay silent are not lost — RegionService retries them on a later
+  /// drive via `unansweredTtl`, which is a genuinely different position and
+  /// therefore a genuinely different attempt.
+  ///
+  /// **Why this runs after the ping rather than the instant each response
+  /// arrives.** Transmitting during the collection window would half-duplex the
+  /// radio while other repeaters are still replying — and discovery responses
+  /// are the coverage measurement this app exists to collect. Regions are
+  /// secondary and must not be bought with primary data. The ping completes
+  /// early (~3 s) once anything answers, so this is already close behind.
+  ///
+  /// Rate limits are not the constraint here: `anon_limiter(4, 180)` is counted
+  /// per repeater, so asking many *different* repeaters throttles nothing.
   Future<void> _maybeDiscoverRegions(PingResult result) async {
     if (result.responses.isEmpty) return;
     if (_regionLookupBusy) return;
     if (!await _regionService.isEnabled()) return;
 
-    for (final resp in result.responses) {
-      final pk = resp.pubkey;
-      // Needs the whole 32-byte key; a truncated id cannot address a request.
-      if (pk == null || pk.length < 64) continue;
-      if (!await _regionService.shouldAsk(resp.nodeId)) continue;
+    _regionLookupBusy = true;
+    final deadline = DateTime.now().add(_regionBatchBudget);
+    var asked = 0;
+    try {
+      // result.responses is already sorted strongest-first, which is also
+      // most-likely-still-in-range order.
+      for (final resp in result.responses) {
+        if (DateTime.now().isAfter(deadline)) {
+          await _logger.logPingEvent(
+              'Regions: batch budget spent after $asked ask(s)');
+          break;
+        }
+        final pk = resp.pubkey;
+        // Needs the whole 32-byte key; a truncated id cannot address a request.
+        if (pk == null || pk.length < 64) continue;
+        if (!await _regionService.shouldAsk(resp.nodeId)) continue;
 
-      _regionLookupBusy = true;
-      try {
-        final bytes = Uint8List.fromList(List<int>.generate(
-          32, (i) => int.parse(pk.substring(i * 2, i * 2 + 2), radix: 16)));
-        final regions = await _loraCompanion.requestRegions(bytes);
-        // null = never answered, [] = answered with no flood-enabled regions.
-        // Recorded distinctly so the retry schedule can tell them apart.
-        await _regionService.record(resp.nodeId, regions ?? const [],
-            answered: regions != null);
-        await _logger.logPingEvent(regions == null
-            ? 'Regions: ${resp.nodeId} did not answer'
-            : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")}');
-      } catch (e) {
-        await _logger.logError('Region discovery', e.toString());
-      } finally {
-        _regionLookupBusy = false;
+        try {
+          final bytes = Uint8List.fromList(List<int>.generate(
+            32, (i) => int.parse(pk.substring(i * 2, i * 2 + 2), radix: 16)));
+          final regions =
+              await _loraCompanion.requestRegions(bytes, attempts: 1);
+          asked++;
+          // null = never answered, [] = answered with no flood-enabled regions.
+          // Recorded distinctly so the retry schedule can tell them apart.
+          await _regionService.record(resp.nodeId, regions ?? const [],
+              answered: regions != null);
+          await _logger.logPingEvent(regions == null
+              ? 'Regions: ${resp.nodeId} did not answer'
+              : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")}');
+        } catch (e) {
+          await _logger.logError('Region discovery', e.toString());
+        }
       }
-      return; // one per ping
+    } finally {
+      _regionLookupBusy = false;
     }
   }
 
