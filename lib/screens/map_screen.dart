@@ -13,6 +13,7 @@ import '../services/lora_companion_service.dart';
 import '../services/database_service.dart';
 import '../services/upload_service.dart';
 import '../services/settings_service.dart';
+import '../services/region_service.dart';
 import '../utils/geohash_utils.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -51,6 +52,15 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   final UploadService _uploadService = UploadService();
   final SettingsService _settingsService = SettingsService();
+  bool _regionDiscoveryEnabled = false;
+  /// Samples collected but not yet sent. Drives the always-visible Upload
+  /// button — it used to be hidden behind the panel's expander, which made it
+  /// easy to finish a drive and never send the data.
+  int _unuploadedCount = 0;
+  final RegionService _regionService = RegionService();
+  /// Node ids we have a region list for — drives the green repeater markers.
+  /// Rebuilt after a drive rather than per frame; map paint must stay sync.
+  Set<String> _repeatersWithRegions = {};
   late ChatService _chatService;
   late SonarPingService _sonarService;
 
@@ -100,6 +110,7 @@ class _MapScreenState extends State<MapScreen> {
     // Subscribe to sample saved events - reload map when new samples are saved
     _sampleSavedSubscription = _locationService.sampleSavedStream.listen((_) {
       _loadSamples();
+      _refreshUnuploadedCount();
     });
 
     // Subscribe to ping events for visual feedback
@@ -132,6 +143,10 @@ class _MapScreenState extends State<MapScreen> {
     final showCoverage = await _settingsService.getShowCoverage();
     final showEdges = await _settingsService.getShowEdges();
     final showRepeaters = await _settingsService.getShowRepeaters();
+    _regionDiscoveryEnabled = await _settingsService.getRegionDiscovery();
+    await _regionService.preload();
+    _repeatersWithRegions = (await _regionService.allKnown()).keys.toSet();
+    await _refreshUnuploadedCount();
     final colorMode = await _settingsService.getColorMode();
     final pingInterval = await _settingsService.getPingInterval();
     final coveragePrecision = await _settingsService.getCoveragePrecision();
@@ -459,6 +474,11 @@ class _MapScreenState extends State<MapScreen> {
               onLoadSamples: _loadSamples,
               onScanForRepeaters: _scanForRepeaters,
               onRefreshContacts: _refreshContacts,
+              regionDiscoveryEnabled: _regionDiscoveryEnabled,
+              onRegionDiscoveryChanged: (v) async {
+                await _settingsService.setRegionDiscovery(v);
+                if (mounted) setState(() => _regionDiscoveryEnabled = v);
+              },
               sonarPingEnabled: _sonarService.enabled,
               sonarPingInterval: _sonarService.intervalSeconds,
               onSonarEnabledChanged: (v) async {
@@ -487,6 +507,7 @@ class _MapScreenState extends State<MapScreen> {
             onManualPing: _manualPing,
             onUpload: _uploadSamples,
             onClearData: _clearData,
+            unuploadedCount: _unuploadedCount,
           ),
           if (_outsideGeofence)
             Positioned(
@@ -604,6 +625,7 @@ class _MapScreenState extends State<MapScreen> {
           buildRepeaterLayer(
             _notifier.state.repeaters,
             (r) => showRepeaterInfoDialog(context, r, _mapController),
+            repeatersWithRegions: _repeatersWithRegions,
           ),
         if (_notifier.state.currentPosition != null)
           buildCurrentLocationLayer(
@@ -929,6 +951,11 @@ class _MapScreenState extends State<MapScreen> {
     showRepeatersDialog(context, _notifier.state.repeaters, _mapController);
   }
 
+  Future<void> _refreshUnuploadedCount() async {
+    final n = await DatabaseService().getUnuploadedSampleCount();
+    if (mounted && n != _unuploadedCount) setState(() => _unuploadedCount = n);
+  }
+
   Future<void> _uploadSamples() async {
     // Show loading dialog
     showDialog(
@@ -969,6 +996,7 @@ class _MapScreenState extends State<MapScreen> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         
+        _refreshUnuploadedCount();  // clear the badge if it worked
         showDialog(
           context: context,
           builder: (context) => AlertDialog(

@@ -8,6 +8,11 @@ class MapControlPanel extends StatefulWidget {
   final void Function() onDisconnect;
   final void Function() onManualPing;
   final void Function() onUpload;
+
+  /// Samples collected but not yet sent. When non-zero the Upload button is
+  /// shown outside the expander — it used to live inside it, so finishing a
+  /// drive and forgetting to upload was the easy path.
+  final int unuploadedCount;
   final void Function() onClearData;
 
   const MapControlPanel({
@@ -17,6 +22,7 @@ class MapControlPanel extends StatefulWidget {
     required this.onDisconnect,
     required this.onManualPing,
     required this.onUpload,
+    this.unuploadedCount = 0,
     required this.onClearData,
   });
 
@@ -124,18 +130,37 @@ class _MapControlPanelState extends State<MapControlPanel> {
                   ),
                 ],
               ),
-              // Expandable actions
-              if (_expanded) ...[
+              // Upload sits outside the expander whenever there is anything to
+              // send, and names the count so it reads as an outstanding task
+              // rather than a generic action.
+              if (widget.unuploadedCount > 0) ...[
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: widget.onUpload,
                   icon: const Icon(Icons.cloud_upload, size: 18),
-                  label: const Text('Upload'),
+                  label: Text('Upload ${widget.unuploadedCount} '
+                      '${widget.unuploadedCount == 1 ? "sample" : "samples"}'),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    minimumSize: const Size(double.infinity, 36),
+                    minimumSize: const Size(double.infinity, 40),
                   ),
                 ),
+              ],
+              // Expandable actions
+              if (_expanded) ...[
+                const SizedBox(height: 8),
+                if (widget.unuploadedCount == 0)
+                  ElevatedButton.icon(
+                    onPressed: widget.onUpload,
+                    icon: const Icon(Icons.cloud_upload, size: 18),
+                    label: const Text('Upload'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      minimumSize: const Size(double.infinity, 36),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: widget.onClearData,

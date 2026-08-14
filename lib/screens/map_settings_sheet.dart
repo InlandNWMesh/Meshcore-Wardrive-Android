@@ -26,6 +26,8 @@ void showMapSettingsSheet(
   required void Function(bool) onSonarEnabledChanged,
   required void Function(int) onSonarIntervalChanged,
   required Future<void> Function(int?) onMaxEdgeResponsesChanged,
+  required bool regionDiscoveryEnabled,
+  required void Function(bool) onRegionDiscoveryChanged,
 }) {
   showModalBottomSheet(
     context: context,
@@ -246,6 +248,18 @@ void showMapSettingsSheet(
                     'Sonar Ping',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
+                ),
+                SwitchListTile(
+                  title: const Text('Ask Repeaters For Their Regions'),
+                  subtitle: const Text(
+                    'After a ping, asks each new repeater which regions it carries. '
+                    'One extra request per repeater, asked once — not once per ping.',
+                  ),
+                  value: regionDiscoveryEnabled,
+                  onChanged: (value) {
+                    onRegionDiscoveryChanged(value);
+                    Navigator.pop(context);
+                  },
                 ),
                 SwitchListTile(
                   title: const Text('Audio Ping While Recording'),

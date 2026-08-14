@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -11,11 +12,18 @@ import '../constants/map_constants.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'persistent_debug_logger.dart';
+import 'region_service.dart';
 
 class LocationService {
   final DatabaseService _dbService = DatabaseService();
   final LoRaCompanionService _loraCompanion = LoRaCompanionService();
   final PersistentDebugLogger _logger = PersistentDebugLogger();
+  final RegionService _regionService = RegionService();
+
+  /// One region request at a time. They share the single radio with the ping
+  /// loop, and two overlapping exchanges interleave frames on one stream — the
+  /// same reason the companion CLI takes an exclusive lock.
+  bool _regionLookupBusy = false;
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isTracking = false;
   bool _autoPingEnabled = false;
@@ -353,6 +361,44 @@ class LocationService {
     }
   }
   
+  /// Ask ONE newly-seen repeater for its regions, if the user enabled it.
+  ///
+  /// One per ping, not one per responder: the firmware allows 4 anon requests
+  /// per 3 minutes and the radio is shared with the ping loop, so pacing it this
+  /// way collects the fleet gradually over a drive instead of bursting. Anything
+  /// already answered (or asked recently and ignored) is skipped by RegionService.
+  Future<void> _maybeDiscoverRegions(PingResult result) async {
+    if (result.responses.isEmpty) return;
+    if (_regionLookupBusy) return;
+    if (!await _regionService.isEnabled()) return;
+
+    for (final resp in result.responses) {
+      final pk = resp.pubkey;
+      // Needs the whole 32-byte key; a truncated id cannot address a request.
+      if (pk == null || pk.length < 64) continue;
+      if (!await _regionService.shouldAsk(resp.nodeId)) continue;
+
+      _regionLookupBusy = true;
+      try {
+        final bytes = Uint8List.fromList(List<int>.generate(
+          32, (i) => int.parse(pk.substring(i * 2, i * 2 + 2), radix: 16)));
+        final regions = await _loraCompanion.requestRegions(bytes);
+        // null = never answered, [] = answered with no flood-enabled regions.
+        // Recorded distinctly so the retry schedule can tell them apart.
+        await _regionService.record(resp.nodeId, regions ?? const [],
+            answered: regions != null);
+        await _logger.logPingEvent(regions == null
+            ? 'Regions: ${resp.nodeId} did not answer'
+            : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")}');
+      } catch (e) {
+        await _logger.logError('Region discovery', e.toString());
+      } finally {
+        _regionLookupBusy = false;
+      }
+      return; // one per ping
+    }
+  }
+
   /// Perform ping in background and update sample when complete
   void _performPingInBackground(LatLng latLng, String geohash) async {
     try {
@@ -408,6 +454,10 @@ class LocationService {
       // Save ping result as new sample
       await _dbService.insertSample(sample);
       print('Saved ping result: ${sample.id}');
+
+      // Opportunistic region lookup. Deliberately not awaited — a request can
+      // take ~30s across its retries, and the ping loop must not wait on it.
+      unawaited(_maybeDiscoverRegions(pingResult));
       // Notify listeners
       _sampleSavedController.add(null);
     } catch (e) {

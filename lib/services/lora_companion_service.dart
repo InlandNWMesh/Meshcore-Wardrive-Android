@@ -29,7 +29,11 @@ class PingResponse {
   final int? rssi;
   final int? snr;
 
-  const PingResponse({required this.nodeId, this.name, this.rssi, this.snr});
+  /// Full 64-hex-char public key, when the reply carried one. Needed to address
+  /// an anon region request; nodeId alone is a truncated prefix.
+  final String? pubkey;
+
+  const PingResponse({required this.nodeId, this.name, this.rssi, this.snr, this.pubkey});
 
   Map<String, dynamic> toJson() => {
     'nodeId': nodeId,
@@ -645,6 +649,7 @@ class LoRaCompanionService {
           name: r['name'] as String?,
           rssi: r['rssi'] as int?,
           snr: snr,
+          pubkey: r['pubkey'] as String?,
         );
       }
     }
@@ -1196,6 +1201,9 @@ class LoRaCompanionService {
         // Add this response to the list
         _pingResponses[tag]?.add({
           'nodeId': pubkeyShort,
+          // Full 32-byte key, kept because an anon region request must address
+          // the repeater by its whole pubkey — the short id is not enough.
+          'pubkey': pubkey,
           'snr': snr,
           'rssi': rssi,
           'node_type': nodeType,
@@ -1357,6 +1365,7 @@ class LoRaCompanionService {
         if (!activePing.value.isCompleted) {
           _pingResponses[activePing.key]?.add({
             'nodeId': keyPrefix,
+            'pubkey': keyHex,
             'snr': snr,
             'rssi': rssi,
             'node_type': ADV_TYPE_REPEATER,
