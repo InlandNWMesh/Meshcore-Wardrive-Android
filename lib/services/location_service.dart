@@ -400,6 +400,9 @@ class LocationService {
         rssi: pingResult.rssi,
         snr: pingResult.snr,
         pingSuccess: pingSuccess,
+        // Keep every repeater that answered, not just the strongest. `path`
+        // above is still the best one, so coverage maths is unchanged.
+        repeaters: pingResult.responses.map((r) => r.toJson()).toList(),
       );
       
       // Save ping result as new sample

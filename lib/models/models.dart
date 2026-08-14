@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:latlong2/latlong.dart';
 
 class Sample {
@@ -10,6 +12,14 @@ class Sample {
   final int? snr;
   final bool? pingSuccess;
 
+  /// Every repeater that answered this ping, strongest first, as
+  /// `[{nodeId, name?, rssi, snr}, ...]`.
+  ///
+  /// `path` remains the single best responder so the success-rate maths and all
+  /// historical data stay comparable; this is purely the extra detail that used
+  /// to be discarded. Empty for GPS-only samples and timeouts.
+  final List<Map<String, dynamic>> repeaters;
+
   Sample({
     required this.id,
     required this.position,
@@ -19,6 +29,7 @@ class Sample {
     this.rssi,
     this.snr,
     this.pingSuccess,
+    this.repeaters = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +42,7 @@ class Sample {
         'rssi': rssi,
         'snr': snr,
         'pingSuccess': pingSuccess,
+        if (repeaters.isNotEmpty) 'repeaters': repeaters,
       };
 
   factory Sample.fromJson(Map<String, dynamic> json) {
@@ -43,6 +55,7 @@ class Sample {
       rssi: json['rssi'] as int?,
       snr: json['snr'] as int?,
       pingSuccess: json['pingSuccess'] as bool?,
+      repeaters: _decodeRepeaters(json['repeaters']),
     );
   }
 
@@ -56,6 +69,9 @@ class Sample {
         'rssi': rssi,
         'snr': snr,
         'pingSuccess': pingSuccess == true ? 1 : (pingSuccess == false ? 0 : null),
+        // SQLite has no list type; stored as a JSON string, null when empty so
+        // existing rows and new GPS-only rows look identical.
+        'repeaters': repeaters.isEmpty ? null : jsonEncode(repeaters),
       };
 
   factory Sample.fromMap(Map<String, dynamic> map) {
@@ -69,7 +85,25 @@ class Sample {
       rssi: map['rssi'] as int?,
       snr: map['snr'] as int?,
       pingSuccess: pingSuccessInt == null ? null : pingSuccessInt == 1,
+      repeaters: _decodeRepeaters(map['repeaters']),
     );
+  }
+
+  /// Tolerant decode: accepts a JSON string (SQLite) or an already-decoded
+  /// list (JSON payloads), and returns empty for anything unexpected rather
+  /// than throwing — a malformed extra field must never lose a whole sample.
+  static List<Map<String, dynamic>> _decodeRepeaters(dynamic raw) {
+    if (raw == null) return const [];
+    try {
+      final decoded = raw is String ? jsonDecode(raw) : raw;
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
   }
 }
 

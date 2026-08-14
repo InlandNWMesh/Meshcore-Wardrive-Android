@@ -23,6 +23,14 @@ const int CMD_REMOVE_CONTACT = 15;
 const int CMD_SET_NAME = 19;
 const int CMD_SET_POSITION = 20;
 const int CMD_SEND_CONTROL_DATA = 55;
+const int CMD_SEND_ANON_REQ = 57;  // anonymous request (regions / owner / clock)
+
+// Anonymous request types, from the repeater firmware (MyMesh.cpp).
+// All three are answered ONLY when the request arrives by a DIRECT route, and
+// the repeater rate-limits them to 4 per 3 minutes across all three types.
+const int ANON_REQ_TYPE_REGIONS = 0x01;
+const int ANON_REQ_TYPE_OWNER   = 0x02;
+const int ANON_REQ_TYPE_BASIC   = 0x03;  // remote clock only
 
 // Response codes (radio -> app)
 const int RESP_CODE_OK = 0;
@@ -47,6 +55,7 @@ const int PUSH_CODE_CONTACT_UPDATED = 0x82;
 const int PUSH_CODE_MSG_WAITING = 0x83;
 const int PUSH_CODE_ACK_RECV = 0x84;
 const int PUSH_CODE_CHANNEL_MSG_RECV = 0x85;
+const int PUSH_CODE_BINARY_RESPONSE = 0x8C;  // carries anon-request replies (regions/owner/clock)
 const int PUSH_CODE_CONTROL_DATA = 0x8E;  // Control data packet received (142 decimal)
 
 // Advertisement types
@@ -656,6 +665,81 @@ class MeshCoreProtocol {
   /// Create CMD_SEND_CONTROL_DATA payload for DISCOVER_REQ
   /// tag: 4-byte random identifier to match responses
   /// prefixOnly: if true, responses will contain 8-byte pubkey prefix instead of full 32 bytes
+  /// Build the payload for an anonymous region request.
+  ///
+  /// Wire format expected by the repeater (`MyMesh.cpp`):
+  ///   [32-byte target pubkey][req type][reply-path byte][reply path...]
+  ///
+  /// The reply-path byte packs two fields:
+  ///   bits 0-5 = number of hops, bits 6-7 = (hash size - 1)
+  ///
+  /// ⚠ The reply-path byte is NOT optional. The firmware defaults
+  /// `reply_path_len = -1`, and when it is still negative at reply time it
+  /// answers with `sendFloodReply()` — flooding the whole mesh instead of
+  /// replying directly. Sending an empty path (len 0) is the zero-hop case and
+  /// is correct; sending NO byte at all is what triggers the flood.
+  Uint8List createAnonRegionRequestPayload(
+    Uint8List targetPubkey, {
+    List<int> replyPath = const [],
+    int replyPathHashSize = 1,
+  }) {
+    if (targetPubkey.length != 32) {
+      throw ArgumentError(
+        'target pubkey must be 32 bytes, got ${targetPubkey.length}',
+      );
+    }
+    if (replyPath.length > 63) {
+      throw ArgumentError('reply path may be at most 63 hops');
+    }
+    if (replyPathHashSize < 1 || replyPathHashSize > 4) {
+      throw ArgumentError('reply path hash size must be 1..4');
+    }
+
+    final payload = BytesBuilder();
+    payload.add(targetPubkey);
+    payload.addByte(ANON_REQ_TYPE_REGIONS);
+    // Always emitted, even for a zero-hop reply — see the flood warning above.
+    payload.addByte(((replyPathHashSize - 1) << 6) | (replyPath.length & 63));
+    payload.add(replyPath);
+    return payload.toBytes();
+  }
+
+  /// Parse the payload of a `PUSH_CODE_BINARY_RESPONSE (0x8C)` frame carrying a
+  /// region reply.
+  ///
+  /// Frame from the companion (`companion_radio/MyMesh.cpp`, `pending_req`
+  /// branch) is:
+  ///   [0x8C][reserved 0][tag ×4][ ...repeater payload... ]
+  ///
+  /// ⚠ The companion forwards `&data[4]` — it has ALREADY STRIPPED the 4-byte
+  /// tag the repeater prefixed. So the repeater payload as seen here begins at
+  /// the repeater's clock, NOT at the tag. Assuming otherwise eats the clock as
+  /// a tag and corrupts the first region name.
+  ///
+  /// Pass the frame payload with the leading `[reserved][tag ×4]` removed, i.e.
+  /// starting at the clock.
+  ///
+  /// The names are the repeater's FLOOD-ENABLED regions only — the firmware
+  /// exports with a `REGION_DENY_FLOOD` filter — so this is not the same set an
+  /// admin `region list allowed` would return. A repeater with regions
+  /// configured but flood disabled on all of them answers with an empty list.
+  ({int clock, List<String> regions})? parseAnonRegionReply(Uint8List data) {
+    if (data.length < 4) return null;
+    final clock = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+
+    final body = data.sublist(4);
+    final end = body.indexOf(0);           // NUL-terminated if present
+    final text = String.fromCharCodes(end >= 0 ? body.sublist(0, end) : body);
+
+    final regions = text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    return (clock: clock, regions: regions);
+  }
+
   Uint8List createDiscoveryRequestPayload(int tag, {bool prefixOnly = true}) {
     final payload = BytesBuilder();
     

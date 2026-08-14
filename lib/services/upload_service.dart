@@ -136,6 +136,12 @@ class UploadService {
         'pingSuccess': sample.pingSuccess,
         'timestamp': sample.timestamp.toIso8601String(),
         'appVersion': appVersion,
+        // Every repeater that answered this ping. Sent as ONE sample with a
+        // list — not one sample per repeater — because the server counts
+        // `received`/`lost` per sample, and emitting several would inflate the
+        // success rate wherever repeaters are dense and break comparability
+        // with everything collected before this field existed.
+        if (sample.repeaters.isNotEmpty) 'repeaters': sample.repeaters,
       }).toList();
 
       if (samplesJson.isNotEmpty) {

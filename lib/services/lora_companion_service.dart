@@ -16,6 +16,29 @@ enum ConnectionType { usb, bluetooth, none }
 
 enum PingStatus { success, failed, timeout, pending }
 
+/// One repeater that answered a discovery ping.
+///
+/// A single ping is a broadcast, so several repeaters can answer it. Recording
+/// only the strongest throws away the interesting part: whether a spot is
+/// covered by one repeater or four. That redundancy is what distinguishes
+/// "works until that node reboots" from "genuinely resilient", and it costs no
+/// extra airtime — the replies already arrived.
+class PingResponse {
+  final String nodeId;
+  final String? name;
+  final int? rssi;
+  final int? snr;
+
+  const PingResponse({required this.nodeId, this.name, this.rssi, this.snr});
+
+  Map<String, dynamic> toJson() => {
+    'nodeId': nodeId,
+    if (name != null) 'name': name,
+    'rssi': rssi,
+    'snr': snr,
+  };
+}
+
 class PingResult {
   final DateTime timestamp;
   final PingStatus status;
@@ -26,6 +49,11 @@ class PingResult {
   final double? longitude;
   final String? error;
 
+  /// Every repeater that answered, strongest first. `nodeId`/`rssi`/`snr` above
+  /// stay as the best responder so existing callers and the success-rate maths
+  /// are unchanged — this is purely additional detail.
+  final List<PingResponse> responses;
+
   PingResult({
     required this.timestamp,
     required this.status,
@@ -35,7 +63,11 @@ class PingResult {
     this.latitude,
     this.longitude,
     this.error,
+    this.responses = const [],
   });
+
+  /// How many distinct repeaters heard us here. 0 for a timeout.
+  int get repeaterCount => responses.length;
 
   Map<String, dynamic> toJson() => {
     'timestamp': timestamp.toIso8601String(),
@@ -46,6 +78,9 @@ class PingResult {
     'latitude': latitude,
     'longitude': longitude,
     'error': error,
+    // Omitted when empty so older payloads stay byte-identical.
+    if (responses.isNotEmpty)
+      'repeaters': responses.map((r) => r.toJson()).toList(),
   };
 }
 
@@ -70,6 +105,9 @@ class LoRaCompanionService {
       StreamController<Map<int, Map<String, dynamic>>>.broadcast();
 
   final _pendingPings = <int, Completer<PingResult>>{}; // tag -> completer
+
+  /// Outstanding region requests, keyed by the target's 6-hex-char id prefix.
+  final _pendingRegionRequests = <String, Completer<List<String>?>>{};
   final Map<int, List<Map<String, dynamic>>> _pingResponses =
       {}; // tag -> list of responses
   final _random = Random();
@@ -586,6 +624,102 @@ class LoRaCompanionService {
   /// Send Discovery ping to find nearby repeaters
   /// Uses MeshCore Discovery protocol (DISCOVER_REQ/DISCOVER_RESP)
   /// Note: Repeaters rate-limit responses to 4 per 2 minutes
+  /// Turn the raw response maps collected for one ping into an ordered,
+  /// de-duplicated list, strongest first.
+  ///
+  /// De-duplication matters: a repeater can answer the same tag more than once
+  /// (retransmissions, or the same reply heard by two paths). Counting it twice
+  /// would overstate how many distinct repeaters cover a spot, which is the one
+  /// thing this list exists to measure.
+  static List<PingResponse> _toResponses(List<Map<String, dynamic>> raw) {
+    final byNode = <String, PingResponse>{};
+    for (final r in raw) {
+      final id = r['nodeId'] as String?;
+      if (id == null || id.isEmpty) continue;
+      final snr = r['snr'] as int?;
+      final existing = byNode[id];
+      // Keep the strongest sighting of each repeater.
+      if (existing == null || (snr ?? -999) > (existing.snr ?? -999)) {
+        byNode[id] = PingResponse(
+          nodeId: id,
+          name: r['name'] as String?,
+          rssi: r['rssi'] as int?,
+          snr: snr,
+        );
+      }
+    }
+    final list = byNode.values.toList()
+      ..sort((a, b) => (b.snr ?? -999).compareTo(a.snr ?? -999));
+    return list;
+  }
+
+  /// Ask a repeater for its flood-enabled regions.
+  ///
+  /// Retries because the link is lossy and a single unanswered request tells us
+  /// nothing — but stops the moment an answer arrives, so a responsive repeater
+  /// costs exactly one transmission. Three attempts is the ceiling: firmware
+  /// allows 4 anon requests per 3 minutes and the owner/clock request types
+  /// share that same counter.
+  ///
+  /// Returns null when no reply arrived — which is NOT the same as an empty
+  /// region list. An empty list from a repeater that answered is a real result.
+  Future<List<String>?> requestRegions(
+    Uint8List targetPubkey, {
+    int attempts = 3,
+    Duration perAttemptTimeout = const Duration(seconds: 8),
+    Duration betweenAttempts = const Duration(seconds: 2),
+  }) async {
+    if (!isDeviceConnected) return null;
+
+    final idShort = targetPubkey
+        .take(3)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase();
+
+    for (var attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        // Zero-hop reply path: we only ask repeaters we just heard directly,
+        // so the answer comes straight back. The length byte is always sent —
+        // omitting it makes the firmware flood its reply.
+        final payload = _protocol.createAnonRegionRequestPayload(
+          targetPubkey,
+          replyPath: const [],
+        );
+        final cmd = _createCommandForDevice(CMD_SEND_ANON_REQ, payload);
+
+        final completer = Completer<List<String>?>();
+        _pendingRegionRequests[idShort] = completer;
+
+        _debugLog.logInfo(
+          '🌐 Region request → $idShort (attempt $attempt/$attempts)',
+        );
+        await _sendBinaryToDevice(cmd);
+
+        final result = await completer.future.timeout(
+          perAttemptTimeout,
+          onTimeout: () => null,
+        );
+        _pendingRegionRequests.remove(idShort);
+
+        if (result != null) {
+          _debugLog.logInfo(
+            '🌐 $idShort regions: ${result.isEmpty ? "(none flood-enabled)" : result.join(", ")}',
+          );
+          return result;   // early exit — do not spend the remaining attempts
+        }
+
+        if (attempt < attempts) await Future.delayed(betweenAttempts);
+      } catch (e) {
+        _pendingRegionRequests.remove(idShort);
+        _debugLog.logInfo('🌐 Region request to $idShort failed: $e');
+      }
+    }
+
+    _debugLog.logInfo('🌐 $idShort did not answer after $attempts attempts');
+    return null;
+  }
+
   Future<PingResult> ping({
     double? latitude,
     double? longitude,
@@ -689,11 +823,14 @@ class LoRaCompanionService {
             );
             final best = responses.first;
 
+            final all = _toResponses(responses);
+
             print(
               '✅ Ping complete (early): ${responses.length} repeater(s) responded',
             );
             _debugLog.logPing(
-              '✅ Best response: ${best["nodeId"]} (SNR=${best["snr"]}, RSSI=${best["rssi"]})',
+              '✅ Best response: ${best["nodeId"]} (SNR=${best["snr"]}, RSSI=${best["rssi"]})'
+              '${all.length > 1 ? " — ${all.length} distinct repeaters heard" : ""}',
             );
 
             final result = PingResult(
@@ -704,6 +841,7 @@ class LoRaCompanionService {
               nodeId: best['nodeId'] as String,
               latitude: latitude,
               longitude: longitude,
+              responses: all,
             );
             completer.complete(result);
             _pingResultController.add(result);
@@ -736,9 +874,12 @@ class LoRaCompanionService {
             );
             final best = responses.first;
 
+            final all = _toResponses(responses);
+
             print('✅ Ping complete: ${responses.length} repeater(s) responded');
             _debugLog.logPing(
-              '✅ Best response: ${best["nodeId"]} (SNR=${best["snr"]}, RSSI=${best["rssi"]})',
+              '✅ Best response: ${best["nodeId"]} (SNR=${best["snr"]}, RSSI=${best["rssi"]})'
+              '${all.length > 1 ? " — ${all.length} distinct repeaters heard" : ""}',
             );
 
             final result = PingResult(
@@ -749,6 +890,7 @@ class LoRaCompanionService {
               nodeId: best['nodeId'] as String,
               latitude: latitude,
               longitude: longitude,
+              responses: all,
             );
             completer.complete(result);
             _pingResultController.add(result);
@@ -882,12 +1024,50 @@ class LoRaCompanionService {
       case 0x88: // LOG_RX_DATA — raw radio receive log, used for wardrive sniffing
         _debugLog.logLoRa('📻 Raw RX log frame (0x88), len=${frame.data.length}');
         break;
+      case PUSH_CODE_BINARY_RESPONSE: // 0x8C — carries anon-request replies
+        if (_pendingRegionRequests.isNotEmpty) {
+          _handleRegionReply(frame.data);
+        } else {
+          _debugLog.logLoRa(
+            'Binary response (0x8C) with no request outstanding, '
+            'len=${frame.data.length}',
+          );
+        }
+        break;
       default:
         // Log other frame types for debugging
         _debugLog.logLoRa(
           'Unhandled frame type: 0x${frame.code.toRadixString(16)}',
         );
     }
+  }
+
+  /// Read a region reply out of a `PUSH_CODE_BINARY_RESPONSE` frame.
+  ///
+  /// Frame payload (after the code byte) is `[reserved 0][tag ×4][clock ×4]
+  /// [names]`. The companion strips the repeater's own copy of the tag before
+  /// forwarding, so the repeater payload starts at the clock — hence the 5-byte
+  /// skip here rather than the 1-byte one you would expect.
+  void _handleRegionReply(Uint8List data) {
+    const headerLen = 5; // reserved(1) + tag(4)
+    if (data.length <= headerLen) {
+      _debugLog.logLoRa('🌐 Region reply too short (${data.length}B)');
+      return;
+    }
+
+    final parsed = _protocol.parseAnonRegionReply(
+      Uint8List.fromList(data.sublist(headerLen)),
+    );
+    if (parsed == null) {
+      _debugLog.logLoRa('🌐 Region reply failed to parse');
+      return;
+    }
+
+    // Requests are issued one repeater at a time, so the single outstanding
+    // entry is the right one. The tag at data[1..4] could disambiguate if that
+    // ever changes.
+    final key = _pendingRegionRequests.keys.first;
+    _pendingRegionRequests.remove(key)?.complete(parsed.regions);
   }
 
   /// Handle PUSH_CODE_ADVERT - advertisement from nearby node

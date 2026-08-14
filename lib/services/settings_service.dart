@@ -19,7 +19,23 @@ class SettingsService {
   static const String _sonarPingIntervalKey = 'sonar_ping_interval';
   static const String _maxEdgeResponsesKey = 'max_edge_responses';
   static const String _lockRotationNorthKey = 'lock_rotation_north';
+  /// Shared with RegionService — same key, so the two never disagree.
+  static const String _regionDiscoveryKey = 'region_discovery_enabled';
   
+  /// Whether to ask repeaters for their regions after a successful ping.
+  ///
+  /// Off by default: it is beta, and it spends airtime the user did not ask
+  /// for when they started a drive.
+  Future<bool> getRegionDiscovery() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_regionDiscoveryKey) ?? false;
+  }
+
+  Future<void> setRegionDiscovery(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_regionDiscoveryKey, value);
+  }
+
   Future<bool> getShowSamples() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_showSamplesKey) ?? false;

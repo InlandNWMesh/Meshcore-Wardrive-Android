@@ -7,7 +7,7 @@ import 'dart:io';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'meshcore_wardrive.db';
-  static const int _databaseVersion = 5;
+  static const int _databaseVersion = 6;
 
   static const String tableSamples = 'samples';
   static const String tableMessages = 'messages';
@@ -43,7 +43,8 @@ class DatabaseService {
         snr INTEGER,
         pingSuccess INTEGER,
         observerNames TEXT,
-        uploaded INTEGER DEFAULT 0
+        uploaded INTEGER DEFAULT 0,
+        repeaters TEXT
       )
     ''');
 
@@ -96,6 +97,12 @@ class DatabaseService {
     }
     if (oldVersion < 5) {
       await _createMessagesTable(db);
+    }
+    if (oldVersion < 6) {
+      // Every repeater that answered a ping, as a JSON array. `path` still
+      // holds the best responder, so existing rows stay valid and this column
+      // is simply null for them.
+      await db.execute('ALTER TABLE $tableSamples ADD COLUMN repeaters TEXT');
     }
   }
 

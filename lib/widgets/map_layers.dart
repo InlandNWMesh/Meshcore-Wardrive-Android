@@ -129,20 +129,37 @@ Widget buildEdgeLayer(AggregationResult result, {int? maxEdgeResponses}) {
 
 // ── Repeater layer ────────────────────────────────────────────────────────────
 
+/// Repeater markers.
+///
+/// [repeatersWithRegions] holds the node ids we have a non-empty region list
+/// for; those draw green, everything else stays purple. Passing an empty set
+/// (the default) reproduces the original all-purple behaviour exactly, which
+/// is what happens while region discovery is switched off.
+///
+/// Note the colour means "we have asked and it told us its regions" — not
+/// "this repeater is configured". A repeater we never asked, and one that
+/// answered with no flood-enabled regions, both stay purple.
 Widget buildRepeaterLayer(
   List<Repeater> repeaters,
-  void Function(Repeater) onRepeaterTap,
-) {
+  void Function(Repeater) onRepeaterTap, {
+  Set<String> repeatersWithRegions = const {},
+}) {
   if (repeaters.isEmpty) return const SizedBox.shrink();
 
   final markers = repeaters.map((repeater) {
+    final hasRegions =
+        repeatersWithRegions.contains(repeater.id.toUpperCase());
     return Marker(
       point: repeater.position,
       width: 30,
       height: 30,
       child: GestureDetector(
         onTap: () => onRepeaterTap(repeater),
-        child: const Icon(Icons.cell_tower, color: Colors.purple, size: 30),
+        child: Icon(
+          Icons.cell_tower,
+          color: hasRegions ? Colors.green : Colors.purple,
+          size: 30,
+        ),
       ),
     );
   }).toList();
