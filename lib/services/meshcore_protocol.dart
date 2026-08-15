@@ -35,6 +35,28 @@ const int ANON_REQ_TYPE_BASIC   = 0x03;  // remote clock only
 // Response codes (radio -> app)
 const int RESP_CODE_OK = 0;
 const int RESP_CODE_ERR = 1;
+
+// Error codes carried in RESP_CODE_ERR's first data byte (companion_radio
+// MyMesh.cpp). TABLE_FULL is the one that matters for probe work: the companion
+// allocates anon-request targets from a reserved pool of MAX_ANON_CONTACTS (8),
+// those contacts persist across sessions, and once the pool is full every
+// further anon request is refused before it ever reaches the air.
+const int ERR_CODE_UNSUPPORTED_CMD = 1;
+const int ERR_CODE_NOT_FOUND = 2;
+const int ERR_CODE_TABLE_FULL = 3;
+const int ERR_CODE_BAD_STATE = 4;
+const int ERR_CODE_FILE_IO_ERROR = 5;
+const int ERR_CODE_ILLEGAL_ARG = 6;
+
+String errCodeName(int? c) => switch (c) {
+  ERR_CODE_UNSUPPORTED_CMD => 'UNSUPPORTED_CMD',
+  ERR_CODE_NOT_FOUND => 'NOT_FOUND',
+  ERR_CODE_TABLE_FULL => 'TABLE_FULL',
+  ERR_CODE_BAD_STATE => 'BAD_STATE',
+  ERR_CODE_FILE_IO_ERROR => 'FILE_IO_ERROR',
+  ERR_CODE_ILLEGAL_ARG => 'ILLEGAL_ARG',
+  _ => 'code $c',
+};
 const int RESP_CODE_APP_START = 2;
 const int RESP_CODE_CONTACT = 3;
 const int RESP_CODE_END_OF_CONTACTS = 4;

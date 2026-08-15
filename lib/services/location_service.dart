@@ -455,10 +455,12 @@ class LocationService {
           // null = never answered, [] = answered with no flood-enabled regions.
           // Recorded distinctly so the retry schedule can tell them apart.
           // RSSI/SNR go in alongside so the ask log can be fitted later.
+          final outcome = _loraCompanion.lastAskOutcome;
           await _regionService.record(resp.nodeId, regions ?? const [],
-              answered: regions != null, rssi: rssi, snr: snr);
+              answered: regions != null, rssi: rssi, snr: snr,
+              outcome: outcome);
           await _logger.logPingEvent(regions == null
-              ? 'Regions: ${resp.nodeId} did not answer (rssi=$rssi snr=$snr)'
+              ? 'Regions: ${resp.nodeId} no reply [$outcome] (rssi=$rssi snr=$snr)'
               : 'Regions: ${resp.nodeId} -> ${regions.isEmpty ? "(none)" : regions.join(", ")} (rssi=$rssi snr=$snr)');
         } catch (e) {
           await _logger.logError('Region discovery', e.toString());

@@ -175,6 +175,11 @@ class RegionService {
     required bool answered,
     int? rssi,
     int? snr,
+    /// `answered` | `silent` | `flooded` | `refused:<CODE>` — WHY an ask
+    /// produced nothing. Without it, a radio that refused to transmit and a
+    /// repeater that ignored us are the same row, which made three drives of
+    /// data impossible to interpret.
+    String? outcome,
   }) async {
     await _load();
     final now = DateTime.now();
@@ -196,6 +201,7 @@ class RegionService {
       'regionCount': answered ? regions.length : null,
       'rssi': rssi,
       'snr': snr,
+      if (outcome != null) 'outcome': outcome,
     });
     if (_askLog.length > askLogLimit) {
       _askLog.removeRange(0, _askLog.length - askLogLimit);

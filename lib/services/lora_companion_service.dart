@@ -112,6 +112,24 @@ class LoRaCompanionService {
 
   /// Outstanding region requests, keyed by the target's 6-hex-char id prefix.
   final _pendingRegionRequests = <String, Completer<List<String>?>>{};
+
+  /// Outcome of the most recent send, captured from RESP_CODE_SENT /
+  /// RESP_CODE_ERR so a caller can tell "transmitted and ignored" from
+  /// "never transmitted". Without this, both are recorded as silence — which
+  /// is what made three drives of region data uninterpretable.
+  bool? _lastSendWasFlood;
+  int? _lastErrCode;
+
+  /// Set when the radio refused the last send outright.
+  String? lastSendFailure;
+
+  void _failPendingRegionRequests(String reason) {
+    lastSendFailure = reason;
+    for (final c in _pendingRegionRequests.values) {
+      if (!c.isCompleted) c.complete(null);
+    }
+    _pendingRegionRequests.clear();
+  }
   final Map<int, List<Map<String, dynamic>>> _pingResponses =
       {}; // tag -> list of responses
   final _random = Random();
@@ -714,6 +732,11 @@ class LoRaCompanionService {
         _debugLog.logInfo(
           '🌐 Region request → $idShort (attempt $attempt/$attempts)',
         );
+        // Cleared per attempt so the flags below describe THIS send, not a
+        // stale one from an earlier request.
+        _lastSendWasFlood = null;
+        _lastErrCode = null;
+        lastSendFailure = null;
         await _sendBinaryToDevice(cmd);
 
         final result = await completer.future.timeout(
@@ -723,6 +746,7 @@ class LoRaCompanionService {
         _pendingRegionRequests.remove(idShort);
 
         if (result != null) {
+          lastAskOutcome = 'answered';
           _debugLog.logInfo(
             '🌐 $idShort regions: ${result.isEmpty ? "(none flood-enabled)" : result.join(", ")}',
           );
@@ -736,9 +760,23 @@ class LoRaCompanionService {
       }
     }
 
-    _debugLog.logInfo('🌐 $idShort did not answer after $attempts attempts');
+    // Distinguish the three ways this ends, because they demand different
+    // fixes and all three previously logged as "did not answer":
+    //   refused  — the radio never transmitted (e.g. TABLE_FULL)
+    //   flooded  — transmitted, but as flood, which isRouteDirect() discards
+    //   silent   — genuinely transmitted direct and ignored
+    lastAskOutcome = lastSendFailure != null
+        ? 'refused:${errCodeName(_lastErrCode)}'
+        : (_lastSendWasFlood == true ? 'flooded' : 'silent');
+    _debugLog.logInfo(
+        '🌐 $idShort no reply after $attempts attempt(s) — outcome=$lastAskOutcome');
     return null;
   }
+
+  /// How the last [requestRegions] ended: `silent`, `flooded`, or
+  /// `refused:<CODE>`. Recorded alongside each ask so a drive that never
+  /// transmitted cannot be mistaken for a mesh that ignored us.
+  String? lastAskOutcome;
 
   Future<PingResult> ping({
     double? latitude,
@@ -988,10 +1026,27 @@ class LoRaCompanionService {
         _debugLog.logInfo('✅ Command OK');
         break;
       case RESP_CODE_ERR:
-        _debugLog.logError('❌ Command ERROR');
+        // The error CODE matters and used to be discarded. ERR_CODE_TABLE_FULL
+        // in particular means the radio refused to send at all — the anon
+        // contact pool (MAX_ANON_CONTACTS = 8) was exhausted, and contacts
+        // persist across sessions. A whole drive can fail this way while
+        // looking exactly like every repeater ignoring us.
+        _lastErrCode = frame.data.isNotEmpty ? frame.data[0] : null;
+        _debugLog.logError('❌ Command ERROR ${errCodeName(_lastErrCode)}'
+            '${_lastErrCode == ERR_CODE_TABLE_FULL ? " — contacts exhausted, NOTHING WAS TRANSMITTED" : ""}');
+        // Fail any in-flight region request now rather than letting it sit out
+        // its timeout and be recorded as "no answer".
+        _failPendingRegionRequests('err:${_lastErrCode ?? "?"}');
         break;
       case RESP_CODE_SENT:
-        _debugLog.logInfo('✅ Message sent');
+        // data[0] is the flood flag: 1 = MSG_SEND_SENT_FLOOD, 0 = direct.
+        // This is the single most useful diagnostic we have. An anon request
+        // sent as FLOOD is discarded by the repeater's isRouteDirect() gate
+        // without any reply, so a flooded send is doomed before it leaves —
+        // and until now we logged it identically to a good one.
+        _lastSendWasFlood = frame.data.isNotEmpty && frame.data[0] == 1;
+        _debugLog.logInfo('✅ Message sent'
+            '${_lastSendWasFlood == true ? " ⚠ as FLOOD — anon requests sent this way are silently dropped" : " (direct)"}');
         break;
       case RESP_CODE_BATT_AND_STORAGE:
         _handleBatteryResponse(frame.data);
