@@ -49,3 +49,8 @@ app.*.map.json
 # Don't ignore the releases folder!
 !releases/
 *.apk
+
+# Local working notes — kept on disk, deliberately not published.
+# These are session context, not project documentation, and they carry candid
+# assessments of upstream work that do not belong in a public repo.
+.claude/
