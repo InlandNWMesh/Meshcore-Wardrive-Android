@@ -149,7 +149,11 @@ flutter build apk --debug
 
 ## 📄 License
 
-[Specify your license here]
+GPL-3.0 — see [LICENSE](LICENSE).
+
+Derived from [mintylinux/Meshcore-Wardrive-Android-Source](https://github.com/mintylinux/Meshcore-Wardrive-Android-Source)
+via [george-viaud/Meshcore-Wardrive-Android](https://github.com/george-viaud/Meshcore-Wardrive-Android).
+Redistribution and modification are permitted under the GPL; corresponding source is published in this repository.
 
 ## 🙏 Credits
 

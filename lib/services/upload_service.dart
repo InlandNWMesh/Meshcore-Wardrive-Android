@@ -137,7 +137,16 @@ class UploadService {
         'rssi': sample.rssi,
         'snr': sample.snr,
         'pingSuccess': sample.pingSuccess,
-        'timestamp': sample.timestamp.toIso8601String(),
+        // .toUtc() is load-bearing. DateTime.now().toIso8601String() emits LOCAL
+        // time with no zone designator, and Postgres reads a naive value as UTC
+        // — so every sample was stored 7 hours early in Pacific, and by a
+        // different amount for any contributor in another zone or across a DST
+        // boundary. Fixed forward rather than retroactively: the true offset of
+        // existing rows is unrecoverable (we never recorded the uploader's
+        // zone), so a blanket correction would turn a known, documented error
+        // into a silently wrong dataset. Cells spanning the cutover hold a mix;
+        // app_version is the only way to tell them apart.
+        'timestamp': sample.timestamp.toUtc().toIso8601String(),
         'appVersion': appVersion,
         // Every repeater that answered this ping. Sent as ONE sample with a
         // list — not one sample per repeater — because the server counts
